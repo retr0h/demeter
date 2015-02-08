@@ -1,0 +1,6 @@
+*.egg-info/
+*.eggs/
+.testrepository/
+.tox/
+.vagrant/
+doc/build/

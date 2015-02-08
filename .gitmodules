@@ -1,0 +1,3 @@
+[submodule "vagrant/roles/ANXS.postgresql"]
+	path = vagrant/roles/ANXS.postgresql
+	url = git@github.com:ANXS/postgresql.git

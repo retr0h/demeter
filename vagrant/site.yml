@@ -1,0 +1,37 @@
+---
+- hosts: all
+  pre_tasks:
+    - name: refresh apt cache
+      apt: update_cache=yes cache_valid_time=3600
+
+- hosts: db
+  roles:
+    - role: ANXS.postgresql
+      postgresql_databases:
+        - name: demeter
+      postgresql_users:
+        - name: demeter_user
+          pass: pass
+          encrypted: no
+      postgresql_user_privileges:
+        - name: demeter
+          db: demeter
+          priv: "ALL"
+      postgresql_listen_addresses:
+        - localhost
+        - "{{ ansible_eth1['ipv4']['address'] }}"
+      postgresql_pg_hba_passwd_hosts:
+        - "{{ ansible_eth1['ipv4']['address'] }}/32"
+  tasks:
+    - apt: name={{ item }}
+      with_items:
+        - python-pip
+        - python-dev
+        - libpq-dev
+        - git
+    - pip: name=tox
+    # TODO(retr0h): Temporary - should remove
+    - pip: requirements=/vagrant/{{ item }}
+      with_items:
+        - requirements.txt
+        - test-requirements.txt
