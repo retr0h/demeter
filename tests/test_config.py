@@ -20,18 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy
+import unittest2 as unittest
 
 from demeter import config
 
-memo = {}
 
+class TestConfig(unittest.TestCase):
+    def test_get_dburl(self):
+        result = config.get_dburl()
+        expected = "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
 
-def get_engine():
-    engine = memo.get('engine')
-    if engine:
-        return engine
-    else:
-        engine = sqlalchemy.create_engine(config.get_dburl())
-        memo['engine'] = engine
-        return engine
+        self.assertEquals(expected, result)
