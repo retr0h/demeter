@@ -52,6 +52,7 @@ class TestModels(unittest.TestCase):
     def test_ipv4_address_raises_when_required_fields_not_present(self, value):
         ia = Ipv4Address(**value)
         self._session.add(ia)
+
         with self.assertRaises(sqlalchemy.exc.IntegrityError):
             self._session.commit()
 
@@ -72,6 +73,7 @@ class TestModels(unittest.TestCase):
     def test_ipv4_address_raises_on_invalid_table_type(self, value):
         ia = Ipv4Address(**value)
         self._session.add(ia)
+
         with self.assertRaises(sqlalchemy.exc.DataError):
             self._session.commit()
 
