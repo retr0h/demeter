@@ -20,18 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy
 
-from demeter import config
-
-memo = {}
-
-
-def get_engine():
-    engine = memo.get('engine')
-    if engine:
-        return engine
-    else:
-        engine = sqlalchemy.create_engine(config.get_dburl())
-        memo['engine'] = engine
-        return engine
+def get_dburl():
+    return "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
