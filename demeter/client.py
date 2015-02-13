@@ -25,13 +25,15 @@ import sqlalchemy
 memo = {}
 
 
+def get_dburl():
+    return "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
+
+
 def get_engine():
     engine = memo.get('engine')
     if engine:
         return engine
     else:
-        engine = sqlalchemy.create_engine(
-            "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
-        )
+        engine = sqlalchemy.create_engine(get_dburl())
         memo['engine'] = engine
         return engine
