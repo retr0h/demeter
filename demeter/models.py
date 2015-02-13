@@ -22,7 +22,6 @@
 
 import sqlalchemy
 import sqlalchemy.ext.declarative
-import sqlalchemy.orm as orm
 
 from demeter import client
 
@@ -31,13 +30,5 @@ engine = client.get_engine()
 metadata = sqlalchemy.MetaData(bind=engine)
 
 
-class Tag(Base):
-    __table__ = sqlalchemy.Table('tag', metadata, autoload=True)
-
-
-class Address(Base):
-    __table__ = sqlalchemy.Table('address', metadata, autoload=True)
-    tag = orm.relationship('Tag',
-                           backref=orm.backref('addresses',
-                                               uselist=True,
-                                               cascade='delete,all'))
+class Ipv4Address(Base):
+    __table__ = sqlalchemy.Table('ipv4_address', metadata, autoload=True)

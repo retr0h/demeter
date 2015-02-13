@@ -23,18 +23,19 @@
 import sqlalchemy.exc
 import sqlalchemy.orm as orm
 import unittest2 as unittest
+from ddt import ddt, data
 
 from demeter import client
-from demeter.models import Address
-from demeter.models import Tag
+from demeter.models import Ipv4Address
 
 
+@ddt
 class TestModels(unittest.TestCase):
     def _cleanup(self):
-        tags = self._session.query(Tag).all()
-        for tag in tags:
-            self._session.delete(tag)
-            self._session.commit() 
+        addresses = self._session.query(Ipv4Address).all()
+        for address in addresses:
+            self._session.delete(address)
+        self._session.commit() 
 
     def setUp(self):
         engine = client.get_engine()
@@ -42,20 +43,50 @@ class TestModels(unittest.TestCase):
         self._session = Session()
         self._cleanup()
 
-    def test_tag_requires_a_name(self):
-        tag = Tag(name='tag')
-        self._session.add(tag)
-        self._session.commit()
-
-        response = self._session.query(Tag).first()
-        self.assertEquals('tag', response.name)
-
-        self._session.delete(tag)
-
-    def test_tag_name_has_a_unique_constraint(self):
-        tag1 = Tag(name='tag-1')
-        tag2 = Tag(name='tag-1')
-        self._session.add(tag1)
-        self._session.add(tag2)
+    @data(
+        {'pool_cidr': '10/8', 'address': '10.0.0.1', 'allocated': True},
+        {'pool_name': 'test_pool', 'address': '10.0.0.1', 'allocated': True},
+        {'pool_name': 'test_pool', 'pool_cidr': '10/8', 'allocated': True},
+        {'pool_name': 'test_pool', 'pool_cidr': '10/8', 'address': '10.0.0.1'}
+    )
+    def test_ipv4_address_raises_when_required_fields_not_present(self, value):
+        ia = Ipv4Address(**value)
+        self._session.add(ia)
         with self.assertRaises(sqlalchemy.exc.IntegrityError):
             self._session.commit()
+
+    @data(
+        {'pool_name': 'test_pool',
+         'pool_cidr': 'invalid',
+         'address': '10.1.1.1',
+         'allocated': True},
+        {'pool_name': 'test_pool',
+         'pool_cidr': '10/8',
+         'address': 'invalid',
+         'allocated': True},
+        {'pool_name': 'test_pool',
+         'pool_cidr': '10/8',
+         'address': '10.1.1.1',
+         'allocated': 'invalid'},
+    )
+    def test_ipv4_address_raises_on_invalid_table_type(self, value):
+        ia = Ipv4Address(**value)
+        self._session.add(ia)
+        with self.assertRaises(sqlalchemy.exc.DataError):
+            self._session.commit()
+
+    def test_ipv4_address_has_proper_table_type(self):
+        ia = Ipv4Address(pool_name='test_pool',
+                         pool_cidr='10/8',
+                         address='10.1.1.1',
+                         allocated=True)
+        self._session.add(ia)
+        self._session.commit()
+
+        response = self._session.query(Ipv4Address).first()
+        self.assertEquals('test_pool', response.pool_name)
+        self.assertEquals('10.0.0.0/8', response.pool_cidr)
+        self.assertEquals('10.1.1.1', response.address)
+        assert response.allocated
+
+        self._session.delete(ia)
