@@ -35,7 +35,7 @@ class TestModels(unittest.TestCase):
         addresses = self._session.query(Ipv4Address).all()
         for address in addresses:
             self._session.delete(address)
-        self._session.commit() 
+        self._session.commit()
 
     def setUp(self):
         engine = client.get_engine()
