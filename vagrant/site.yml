@@ -29,4 +29,5 @@
         - python-dev
         - libpq-dev
         - git
+        - make
     - pip: name=tox
