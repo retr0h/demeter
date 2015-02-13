@@ -22,7 +22,7 @@ def upgrade():
         sa.Column('pool_name', sa.String(25), nullable=False),
         sa.Column('pool_cidr', postgresql.CIDR, nullable=False),
         sa.Column('address', postgresql.INET, nullable=False),
-        sa.Column('allocated', sa.Boolean, nullable=False),
+        sa.Column('allocated', sa.Boolean, default=False),
     )
 
 

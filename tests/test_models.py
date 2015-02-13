@@ -44,10 +44,9 @@ class TestModels(unittest.TestCase):
         self._cleanup()
 
     @data(
-        {'pool_cidr': '10/8', 'address': '10.0.0.1', 'allocated': True},
-        {'pool_name': 'test_pool', 'address': '10.0.0.1', 'allocated': True},
-        {'pool_name': 'test_pool', 'pool_cidr': '10/8', 'allocated': True},
-        {'pool_name': 'test_pool', 'pool_cidr': '10/8', 'address': '10.0.0.1'}
+        {'pool_cidr': '10/8', 'address': '10.0.0.1'},
+        {'pool_name': 'test_pool', 'address': '10.0.0.1'},
+        {'pool_name': 'test_pool', 'pool_cidr': '10/8'},
     )
     def test_ipv4_address_raises_when_required_fields_not_present(self, value):
         ia = Ipv4Address(**value)
@@ -59,12 +58,10 @@ class TestModels(unittest.TestCase):
     @data(
         {'pool_name': 'test_pool',
          'pool_cidr': 'invalid',
-         'address': '10.1.1.1',
-         'allocated': True},
+         'address': '10.1.1.1'},
         {'pool_name': 'test_pool',
          'pool_cidr': '10/8',
-         'address': 'invalid',
-         'allocated': True},
+         'address': 'invalid'},
         {'pool_name': 'test_pool',
          'pool_cidr': '10/8',
          'address': '10.1.1.1',
@@ -80,8 +77,7 @@ class TestModels(unittest.TestCase):
     def test_ipv4_address_has_proper_table_type(self):
         ia = Ipv4Address(pool_name='test_pool',
                          pool_cidr='10/8',
-                         address='10.1.1.1',
-                         allocated=True)
+                         address='10.1.1.1')
         self._session.add(ia)
         self._session.commit()
 
@@ -89,6 +85,6 @@ class TestModels(unittest.TestCase):
         self.assertEquals('test_pool', response.pool_name)
         self.assertEquals('10.0.0.0/8', response.pool_cidr)
         self.assertEquals('10.1.1.1', response.address)
-        assert response.allocated
+        assert not response.allocated
 
         self._session.delete(ia)
