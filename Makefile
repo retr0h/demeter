@@ -6,7 +6,7 @@ deps:
 up:
 	@vagrant up --no-provision
 	@vagrant provision 
-	@alembic upgrade head
+	@tox -e db_up
 	
 test:
 	@tox

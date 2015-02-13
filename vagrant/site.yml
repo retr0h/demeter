@@ -30,8 +30,3 @@
         - libpq-dev
         - git
     - pip: name=tox
-    # TODO(retr0h): Temporary - should remove
-    - pip: requirements=/vagrant/{{ item }}
-      with_items:
-        - requirements.txt
-        - test-requirements.txt
