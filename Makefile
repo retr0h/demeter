@@ -1,4 +1,4 @@
-all: deps up test docs
+all: deps up migrate test docs
 
 deps:
 	@git submodule update --init
@@ -6,12 +6,14 @@ deps:
 up:
 	@vagrant up --no-provision
 	@vagrant provision 
-	@tox -e db_up
 	
-test:
+test: migrate
 	@tox
 
 docs:
 	@tox -e docs
 
-.PNONY: all deps up test docs
+migrate:
+	@tox -e db_up
+
+.PNONY: all deps up test docs migrate
