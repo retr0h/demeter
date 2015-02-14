@@ -44,7 +44,7 @@ class Address(object):
     def _valid_network(self, cidr):
         """
         Determines if the given CIDR is valid.  If valid returns a
-        :class:`netaddr.IPNetwork` object, otherwise returns False.
+        :class:`netaddr.IPNetwork` object, otherwise raises.
 
         :param cidr: A string containing the CIDR to validate.
         :raises: :class:`Address.InvalidNetworkException` when invalid cidr.
@@ -56,7 +56,8 @@ class Address(object):
 
     def _allowed_network(self, ip_network):
         """
-        Determines if the provided network is too large.  Returns a boolean.
+        Determines if the provided network is too large.  If allowed returns
+        True, otherwise raises.
 
         Currently we are scoping our "allowed" network to a /24.  This is lame
         but the IP allocation algorythim isn't very sophisticated.  Attempting
