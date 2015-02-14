@@ -20,18 +20,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy.exc
 import sqlalchemy.orm as orm
+
 import unittest2 as unittest
 from ddt import data
 from ddt import ddt
+from ddt import unpack
 
+from demeter import Address
 from demeter import client
 from demeter.models import Ipv4Address
 
 
 @ddt
-class TestModels(unittest.TestCase):
+class TestAddress(unittest.TestCase):
     def _cleanup(self):
         addresses = self._session.query(Ipv4Address).all()
         for address in addresses:
@@ -39,53 +41,46 @@ class TestModels(unittest.TestCase):
         self._session.commit()
 
     def setUp(self):
+        self._address = Address.Address()
         engine = client.get_engine()
         Session = orm.sessionmaker(bind=engine)
         self._session = Session()
         self._cleanup()
 
-    @data(
-        {'pool_cidr': '10/8', 'address': '10.0.0.1'},
-        {'pool_name': 'test_pool', 'address': '10.0.0.1'},
-        {'pool_name': 'test_pool', 'pool_cidr': '10/8'},
-    )
-    def test_ipv4_address_raises_when_required_fields_not_present(self, value):
-        ia = Ipv4Address(**value)
-        self._session.add(ia)
+    def test_valid_network(self):
+        result = self._address._valid_network('192.0.2.0/24')
 
-        with self.assertRaises(sqlalchemy.exc.IntegrityError):
-            self._session.commit()
+        self.assertEquals(256, len(result))
 
     @data(
-        {'pool_name': 'test_pool',
-         'pool_cidr': 'invalid',
-         'address': '10.1.1.1'},
-        {'pool_name': 'test_pool',
-         'pool_cidr': '10/8',
-         'address': 'invalid'},
-        {'pool_name': 'test_pool',
-         'pool_cidr': '10/8',
-         'address': '10.1.1.1',
-         'allocated': 'invalid'},
+        (24, 256),
+        (25, 128),
+        (26, 64),
+        (27, 32),
+        (28, 16),
+        (29, 8),
+        (30, 4),
+        (31, 2),
+        (32, 1),
     )
-    def test_ipv4_address_raises_on_invalid_table_type(self, value):
-        ia = Ipv4Address(**value)
-        self._session.add(ia)
+    @unpack
+    def test_allocate(self, value, expected):
+        cidr = '192.168.2.0/{0}'.format(value)
+        self._address.allocate('test_pool', cidr)
 
-        with self.assertRaises(sqlalchemy.exc.DataError):
-            self._session.commit()
+        results = self._session.query(Ipv4Address).filter(
+            Ipv4Address.pool_name == 'test_pool').all()
 
-    def test_ipv4_address_has_proper_table_type(self):
-        ia = Ipv4Address(pool_name='test_pool',
-                         pool_cidr='10/8',
-                         address='10.1.1.1')
-        self._session.add(ia)
-        self._session.commit()
+        self.assertEquals(expected, len(results))
 
-        response = self._session.query(Ipv4Address).first()
-        self.assertEquals('test_pool', response.pool_name)
-        self.assertEquals('10.0.0.0/8', response.pool_cidr)
-        self.assertEquals('10.1.1.1', response.address)
-        assert not response.allocated
+    def test_allocate_raises_with_invalid_network(self):
+        cidr = '192.0.2.0/36'
 
-        self._session.delete(ia)
+        with self.assertRaises(Address.InvalidNetworkException):
+            self._address.allocate('test_pool', cidr)
+
+    def test_allocate_raises_with_address_(self):
+        cidr = '192.0.2.0/22'
+
+        with self.assertRaises(Address.NetworkNotAllowedException):
+            self._address.allocate('test_pool', cidr)

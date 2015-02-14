@@ -1,4 +1,5 @@
 alembic
+netaddr
 pbr
 psycopg2
 sqlalchemy

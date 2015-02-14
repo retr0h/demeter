@@ -28,6 +28,9 @@ memo = {}
 
 
 def get_engine():
+    """
+    Return the sqlalchemy engine.  The result is memoized.
+    """
     engine = memo.get('engine')
     if engine:
         return engine
