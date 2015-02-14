@@ -36,6 +36,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   address
+
 Indices and tables
 ==================
 
