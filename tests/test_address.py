@@ -66,11 +66,11 @@ class TestAddress(unittest.TestCase):
     @unpack
     def test_allocate(self, value, expected):
         cidr = '192.168.2.0/{0}'.format(value)
-        pool_name = 'test_pool_{0}'.format(value)
-        self._address.allocate(pool_name, cidr)
+        namespace = 'test_namespace_{0}'.format(value)
+        self._address.allocate(namespace, cidr)
 
         results = self._session.query(Ipv4Address).filter(
-            Ipv4Address.pool_name == pool_name).all()
+            Ipv4Address.namespace == namespace).all()
 
         self.assertEquals(expected, len(results))
 
@@ -78,10 +78,10 @@ class TestAddress(unittest.TestCase):
         cidr = '192.0.2.0/36'
 
         with self.assertRaises(Address.InvalidNetworkException):
-            self._address.allocate('test_pool', cidr)
+            self._address.allocate('test_namespace', cidr)
 
     def test_allocate_raises_with_address_(self):
         cidr = '192.0.2.0/22'
 
         with self.assertRaises(Address.NetworkNotAllowedException):
-            self._address.allocate('test_pool', cidr)
+            self._address.allocate('test_namespace', cidr)
