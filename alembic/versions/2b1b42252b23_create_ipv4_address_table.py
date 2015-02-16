@@ -22,7 +22,11 @@ def upgrade():
         sa.Column('pool_name', sa.String(25), nullable=False),
         sa.Column('pool_cidr', postgresql.CIDR, nullable=False),
         sa.Column('address', postgresql.INET, nullable=False),
-        sa.Column('allocated', sa.Boolean, default=False),
+        sa.Column('allocated', sa.Boolean, server_default='0'),
+        # getconf HOST_NAME_MAX
+        sa.Column('hostname', sa.String(64)),
+
+        sa.UniqueConstraint('pool_name', 'hostname', name='uix_1')
     )
 
 
