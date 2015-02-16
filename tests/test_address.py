@@ -66,10 +66,11 @@ class TestAddress(unittest.TestCase):
     @unpack
     def test_allocate(self, value, expected):
         cidr = '192.168.2.0/{0}'.format(value)
-        self._address.allocate('test_pool', cidr)
+        pool_name = 'test_pool_{0}'.format(value)
+        self._address.allocate(pool_name, cidr)
 
         results = self._session.query(Ipv4Address).filter(
-            Ipv4Address.pool_name == 'test_pool').all()
+            Ipv4Address.pool_name == pool_name).all()
 
         self.assertEquals(expected, len(results))
 
