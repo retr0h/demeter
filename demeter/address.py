@@ -73,7 +73,7 @@ class Address(object):
         else:
             raise NetworkNotAllowedException
 
-    def allocate(self, pool_name, cidr):
+    def allocate(self, namespace, cidr):
         """
         Populate the database with addresses from the given cidr.  Returns True
         on success, otherwise the called functions raise.
@@ -81,15 +81,15 @@ class Address(object):
         TODO: Need to filter the cidr with rules (e.g. network, broadcast,
         addresses).
 
-        :param pool_name: A string containing the name to call the cidr.
+        :param namespace: A string containing the namespace to nest the cidr.
         :param cidr: A string containing the CIDR to validate.
         """
         ip_network = self._valid_network(cidr)
         if ip_network:
             if self._allowed_network(ip_network):
                 for ip in ip_network:
-                    ia = Ipv4Address(pool_name=pool_name,
-                                     pool_cidr=cidr,
+                    ia = Ipv4Address(namespace=namespace,
+                                     cidr=cidr,
                                      address=str(ip))
                     self._session.add(ia)
                 self._session.commit()

@@ -38,8 +38,8 @@ class TestModels(unittest.TestCase):
 
     @data(
         ('id', 'INTEGER', 'False'),
-        ('pool_name', 'VARCHAR(25)', 'False'),
-        ('pool_cidr', 'CIDR', 'False'),
+        ('namespace', 'VARCHAR(25)', 'False'),
+        ('cidr', 'CIDR', 'False'),
         ('address', 'INET', 'False'),
         ('allocated', 'BOOLEAN', 'True'),
         ('hostname', 'VARCHAR(64)', 'True'),
@@ -52,9 +52,9 @@ class TestModels(unittest.TestCase):
                 self.assertEquals(type, str(column.get('type')))
                 self.assertEquals(nullable, str(column.get('nullable')))
 
-    def test_ipv4_address_has_hostname_to_pool_name_uniq_costraint(self):
+    def test_ipv4_address_has_hostname_to_namespace_uniq_costraint(self):
         constraints = self._inspector.get_unique_constraints('ipv4_address')
         constraint = constraints[0].get('column_names')
-        expected = ['pool_name', 'hostname']
+        expected = ['namespace', 'hostname']
 
         self.assertEquals(expected, constraint)
