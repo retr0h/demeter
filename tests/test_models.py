@@ -55,6 +55,6 @@ class TestModels(unittest.TestCase):
     def test_ipv4_address_has_hostname_to_namespace_uniq_costraint(self):
         constraints = self._inspector.get_unique_constraints('ipv4_address')
         constraint = constraints[0].get('column_names')
-        expected = ['namespace', 'hostname']
+        expected = ['namespace', 'hostname', 'cidr']
 
         self.assertEquals(expected, constraint)

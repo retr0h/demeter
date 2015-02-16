@@ -26,7 +26,8 @@ def upgrade():
         # getconf HOST_NAME_MAX
         sa.Column('hostname', sa.String(64)),
 
-        sa.UniqueConstraint('namespace', 'hostname', name='uix_1')
+        sa.UniqueConstraint('namespace', 'hostname', 'cidr', name='uix_1'),
+        # sa.UniqueConstraint('namespace', 'cidr', name='uix_2')
     )
 
 
