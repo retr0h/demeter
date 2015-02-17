@@ -1,5 +1,6 @@
 ddt
 flake8
+mock
 pep8
 sphinx
 testrepository

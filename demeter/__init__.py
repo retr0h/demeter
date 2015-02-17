@@ -20,11 +20,52 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import pbr.version
+from contextlib import contextmanager
+from sqlalchemy import orm
 
-version_info = pbr.version.VersionInfo('demeter')
+from pbr import version
+
+from demeter import client
+
+engine = client.get_engine()
+session_factory = orm.sessionmaker(bind=engine)
+Session = orm.scoped_session(session_factory)
 
 try:
+    version_info = version.VersionInfo('demeter')
     __version__ = version_info.version_string()
 except AttributeError:
     __version__ = None
+
+
+@contextmanager
+def transactional_session():
+    """
+    Provide a transactional scope around a series of operations.
+    """
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    # TODO(retr0h): Figure out how to handle sessions better.
+    # finally:
+    #     session.close()
+
+
+@contextmanager
+def temp_session():
+    """
+    Simple context manager that provides a temporary Session object to the
+    nested block.
+    """
+    session = Session()
+    try:
+        yield session
+    except:
+        raise
+    # TODO(retr0h): Figure out how to handle sessions better.
+    # finally:
+    #     session.close()
