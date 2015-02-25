@@ -21,14 +21,10 @@
 # THE SOFTWARE.
 
 import netaddr
-import sqlalchemy.orm as orm
 
-from demeter import client
-from demeter.models import Ipv4Address
-
-
-class InvalidNetworkException(Exception):
-    pass
+import demeter
+from demeter import models
+from demeter import namespace
 
 
 class NetworkNotAllowedException(Exception):
@@ -36,25 +32,32 @@ class NetworkNotAllowedException(Exception):
 
 
 class Address(object):
-    def __init__(self):
-        engine = client.get_engine()
-        Session = orm.sessionmaker(bind=engine)
-        self._session = Session()
+    def create(self, cidr, address, hostname, ns_name):
+        ns = namespace.Namespace().find_by_name(ns_name)
+        if ns and not self.find_by_ns_and_cidr(ns.name, cidr):
+            addr = models.Ipv4Address(cidr=cidr,
+                                      address=address,
+                                      hostname=hostname,
+                                      namespace=ns)
+            with demeter.transactional_session() as session:
+                session.add(addr)
+                return addr
 
-    def _valid_network(self, cidr):
-        """
-        Determines if the given CIDR is valid.  If valid returns a
-        :class:`netaddr.IPNetwork` object, otherwise raises.
+    def delete_all(self):
+        """ Performs a cascading delete """
+        with demeter.transactional_session() as session:
+            addresses = session.query(models.Ipv4Address).all()
+            for address in addresses:
+                session.delete(address)
 
-        :param cidr: A string containing the CIDR to validate.
-        :raises: :class:`Address.InvalidNetworkException` when invalid cidr.
-        """
-        try:
-            return netaddr.IPNetwork(cidr)
-        except netaddr.AddrFormatError:
-            raise InvalidNetworkException
+    def find_by_ns_and_cidr(self, ns_name, cidr):
+        with demeter.temp_session() as session:
+            ns = models.Namespace
+            addr = models.Ipv4Address
+            return session.query(ns).join(ns.address).filter(
+                ns.name == ns_name, addr.cidr == cidr).first()
 
-    def _allowed_network(self, ip_network):
+    def _allowed_network(self, cidr):
         """
         Determines if the provided network is too large.  If allowed returns
         True, otherwise raises.
@@ -64,33 +67,35 @@ class Address(object):
         to protect against allocating huge contiguous blocks of addresses in
         the DB.
 
-        :param ip_network: A :class:`netaddr.IPNetwork` object.
+        :param cidr: A string containing the CIDR to validate.
         :raises: :class:`Address.NetworkNotAllowedException` when network
                  is outside the allowed range.
+        :raises: :class:`netaddr.AddrFormatError` when invalid cidr.
         """
+        ip_network = netaddr.IPNetwork(cidr)
         if ip_network.prefixlen >= 24 and ip_network.prefixlen <= 32:
             return True
         else:
             raise NetworkNotAllowedException
 
-    def allocate(self, namespace, cidr):
-        """
-        Populate the database with addresses from the given cidr.  Returns True
-        on success, otherwise the called functions raise.
+    # def allocate(self, namespace, cidr):
+    #     """
+    #     Populate the database with addresses from the given cidr.  Returns
+    #     True on success, otherwise the called functions raise.
 
-        TODO: Need to filter the cidr with rules (e.g. network, broadcast,
-        addresses).
+    #     TODO: Need to filter the cidr with rules (e.g. network, broadcast,
+    #     addresses).
 
-        :param namespace: A string containing the namespace to nest the cidr.
-        :param cidr: A string containing the CIDR to validate.
-        """
-        ip_network = self._valid_network(cidr)
-        if ip_network:
-            if self._allowed_network(ip_network):
-                for ip in ip_network:
-                    ia = Ipv4Address(namespace=namespace,
-                                     cidr=cidr,
-                                     address=str(ip))
-                    self._session.add(ia)
-                self._session.commit()
-                return True
+    #     :param namespace: A string containing the namespace to nest the cidr.
+    #     :param cidr: A string containing the CIDR to validate.
+    #     """
+    #     # ip_network = self._valid_network(cidr)
+    #     # if ip_network:
+    #     #     if self._allowed_network(ip_network):
+    #     #         for ip in ip_network:
+    #     #             ia = Ipv4Address(namespace=namespace,
+    #     #                              cidr=cidr,
+    #     #                              address=str(ip))
+    #     #             self._session.add(ia)
+    #     #         self._session.commit()
+    #     #         return True

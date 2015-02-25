@@ -20,12 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy
-import sqlalchemy.exc
-import unittest2 as unittest
 from ddt import data
 from ddt import ddt
 from ddt import unpack
+import sqlalchemy
+import unittest2 as unittest
 
 from demeter import client
 
@@ -37,24 +36,25 @@ class TestModels(unittest.TestCase):
         self._inspector = sqlalchemy.inspect(engine)
 
     @data(
-        ('id', 'INTEGER', 'False'),
-        ('namespace', 'VARCHAR(25)', 'False'),
-        ('cidr', 'CIDR', 'False'),
-        ('address', 'INET', 'False'),
-        ('allocated', 'BOOLEAN', 'True'),
-        ('hostname', 'VARCHAR(64)', 'True'),
+        ('namespaces', 'id', 'INTEGER', 'False'),
+        ('namespaces', 'name', 'VARCHAR(16)', 'False'),
+        ('ipv4_addresses', 'id', 'INTEGER', 'False'),
+        ('ipv4_addresses', 'cidr', 'CIDR', 'False'),
+        ('ipv4_addresses', 'address', 'INET', 'False'),
+        ('ipv4_addresses', 'allocated', 'BOOLEAN', 'True'),
+        ('ipv4_addresses', 'hostname', 'VARCHAR(64)', 'True'),
     )
     @unpack
-    def test_ipv4_address_schema(self, name, type, nullable):
-        columns = self._inspector.get_columns('ipv4_address')
+    def test_model_schema(self, table, col_name, col_type, nullable):
+        columns = self._inspector.get_columns(table)
         for column in columns:
-            if column.get('name') == name:
-                self.assertEquals(type, str(column.get('type')))
+            if column.get('name') == col_name:
+                self.assertEquals(col_type, str(column.get('type')))
                 self.assertEquals(nullable, str(column.get('nullable')))
 
-    def test_ipv4_address_has_hostname_to_namespace_uniq_costraint(self):
-        constraints = self._inspector.get_unique_constraints('ipv4_address')
+    def test_namespace_table_has_name_to_cidr_unique_costraint(self):
+        constraints = self._inspector.get_unique_constraints('namespaces')
         constraint = constraints[0].get('column_names')
-        expected = ['namespace', 'hostname']
+        expected = ['name']
 
         self.assertEquals(expected, constraint)

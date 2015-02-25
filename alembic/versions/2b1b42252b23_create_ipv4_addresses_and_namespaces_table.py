@@ -1,4 +1,4 @@
-"""create ipv4_address table
+"""create ipv4_addresses and namespaces table
 
 Revision ID: 2b1b42252b23
 Revises: None
@@ -17,18 +17,28 @@ from sqlalchemy.dialects import postgresql
 
 def upgrade():
     op.create_table(
-        'ipv4_address',
+        'namespaces',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('namespace', sa.String(25), nullable=False),
+        sa.Column('name', sa.String(16), nullable=False),
+
+        sa.UniqueConstraint('name', name='name_uix'),
+    )
+
+    op.create_table(
+        'ipv4_addresses',
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('cidr', postgresql.CIDR, nullable=False),
         sa.Column('address', postgresql.INET, nullable=False),
         sa.Column('allocated', sa.Boolean, server_default='0'),
         # getconf HOST_NAME_MAX
         sa.Column('hostname', sa.String(64)),
-
-        sa.UniqueConstraint('namespace', 'hostname', name='uix_1')
+        sa.Column('namespace_id',
+                  sa.Integer,
+                  sa.ForeignKey('namespaces.id'),
+                  primary_key=True),
     )
 
 
 def downgrade():
-    op.drop_table('ipv4_address')
+    op.drop_table('ipv4_addresses')
+    op.drop_table('namespaces')

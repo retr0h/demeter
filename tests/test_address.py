@@ -20,68 +20,115 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy.orm as orm
-
-import unittest2 as unittest
 from ddt import data
 from ddt import ddt
 from ddt import unpack
+import netaddr
+import unittest2 as unittest
 
 from demeter import Address
-from demeter import client
-from demeter.models import Ipv4Address
+from demeter import Namespace
 
 
 @ddt
 class TestAddress(unittest.TestCase):
-    def _cleanup(self):
-        addresses = self._session.query(Ipv4Address).all()
-        for address in addresses:
-            self._session.delete(address)
-        self._session.commit()
-
     def setUp(self):
         self._address = Address.Address()
-        engine = client.get_engine()
-        Session = orm.sessionmaker(bind=engine)
-        self._session = Session()
-        self._cleanup()
+        self._namespace = Namespace.Namespace()
+        self._address.delete_all()
 
-    def test_valid_network(self):
-        result = self._address._valid_network('192.0.2.0/24')
-
-        self.assertEquals(256, len(result))
-
-    @data(
-        (24, 256),
-        (25, 128),
-        (26, 64),
-        (27, 32),
-        (28, 16),
-        (29, 8),
-        (30, 4),
-        (31, 2),
-        (32, 1),
-    )
     @unpack
-    def test_allocate(self, value, expected):
-        cidr = '192.168.2.0/{0}'.format(value)
-        namespace = 'test_namespace_{0}'.format(value)
-        self._address.allocate(namespace, cidr)
+    @data(
+        ('test-namespace', '198.51.100.0/24', '198.51.100.1', 'test-hostname')
+    )
+    def test_create_when_namespace_exists(self,
+                                          ns_name,
+                                          cidr,
+                                          address,
+                                          hostname):
+        self._namespace.create(ns_name)
 
-        results = self._session.query(Ipv4Address).filter(
-            Ipv4Address.namespace == namespace).all()
+        result = self._address.create(cidr, address, hostname, ns_name)
+        self.assertEquals('198.51.100.0/24', result.cidr)
 
-        self.assertEquals(expected, len(results))
+    @unpack
+    @data(
+        ('invalid', '198.51.100.0/24', '198.51.100.1', 'invalid-hostname')
+    )
+    def test_create_is_false_when_namespace_not_found(self,
+                                                      ns_name,
+                                                      cidr,
+                                                      address,
+                                                      hostname):
+        result = self._address.create(cidr, address, hostname, ns_name)
+        assert not result
 
-    def test_allocate_raises_with_invalid_network(self):
-        cidr = '192.0.2.0/36'
+    @unpack
+    @data(
+        ('test-namespace', '198.51.100.0/24', '198.51.100.1', 'test-hostname')
+    )
+    def test_delete_all_cascades(self, ns_name, cidr, address, hostname):
+        self._namespace.create(ns_name)
+        self._address.create(cidr, address, hostname, ns_name)
+        self._address.delete_all()
 
-        with self.assertRaises(Address.InvalidNetworkException):
-            self._address.allocate('test_namespace', cidr)
+        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
+        assert not result
+        result = self._namespace.find_by_name(ns_name)
+        assert not result
 
-    def test_allocate_raises_with_address_(self):
-        cidr = '192.0.2.0/22'
+    @unpack
+    @data(
+        ('test-namespace', '198.51.100.0/24', '198.51.100.1', 'test-hostname')
+    )
+    def test_find_by_ns_and_cidr(self, ns_name, cidr, address, hostname):
+        self._namespace.create(ns_name)
+        self._address.create(cidr, address, hostname, ns_name)
 
+        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
+        self.assertEquals('198.51.100.0/24', result.address.cidr)
+
+    @unpack
+    @data(
+        ('invalid', '198.51.100.0/24')
+    )
+    def test_find_by_ns_and_cidr_is_false_when_not_found(self, ns_name, cidr):
+        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
+        assert not result
+
+    @data('198.51.100.0/24')
+    def test_allowed_network(self, cidr):
+        result = self._address._allowed_network(cidr)
+        assert result
+
+    @data('198.51.100.0/36')
+    def test_allowed_network_raises_on_invalid_cidr(self, cidr):
+        with self.assertRaises(netaddr.AddrFormatError):
+            self._address._allowed_network(cidr)
+
+    @data('198.51.100.0/22')
+    def test_allowed_network_raises_on_disallowed(self, cidr):
         with self.assertRaises(Address.NetworkNotAllowedException):
-            self._address.allocate('test_namespace', cidr)
+            self._address._allowed_network(cidr)
+
+    # @data(
+    #     (24, 256),
+    #     (25, 128),
+    #     (26, 64),
+    #     (27, 32),
+    #     (28, 16),
+    #     (29, 8),
+    #     (30, 4),
+    #     (31, 2),
+    #     (32, 1),
+    # )
+    # @unpack
+    # def test_allocate(self, value, expected):
+    #     cidr = '192.168.2.0/{0}'.format(value)
+    #     namespace = 'test_namespace_{0}'.format(value)
+    #     self._address.allocate(namespace, cidr)
+
+    #     results = self._session.query(Ipv4Address).filter(
+    #         Ipv4Address.namespace == namespace).all()
+
+    #     self.assertEquals(expected, len(results))

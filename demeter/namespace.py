@@ -20,26 +20,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sqlalchemy
-from sqlalchemy.ext import declarative
-from sqlalchemy import orm
-
-from demeter import client
-
-Base = declarative.declarative_base()
-engine = client.get_engine()
-metadata = sqlalchemy.MetaData(bind=engine)
+import demeter
+from demeter import models
 
 
-class Namespace(Base):
-    __table__ = sqlalchemy.Table('namespaces', metadata, autoload=True)
+class Namespace(object):
+    def create(self, name):
+        if not self.find_by_name(name):
+            ns = models.Namespace(name=name)
+            with demeter.transactional_session() as session:
+                session.add(ns)
+                return ns
 
+    def delete_all(self):
+        """ Delete namespaces which do not have parents. """
+        with demeter.transactional_session() as session:
+            namespaces = session.query(models.Namespace).all()
+            for namespace in namespaces:
+                try:
+                    namespace.address.cidr
+                except AttributeError:
+                    session.delete(namespace)
 
-class Ipv4Address(Base):
-    __table__ = sqlalchemy.Table('ipv4_addresses', metadata, autoload=True)
-    namespace = orm.relationship('Namespace',
-                                 cascade='all,delete-orphan',
-                                 single_parent=True,
-                                 backref=orm.backref('address',
-                                                     uselist=False,
-                                                     cascade='all'))
+    def delete_by_name(self, name):
+        result = self.find_by_name(name)
+        if result:
+            with demeter.transactional_session() as session:
+                session.delete(result)
+                return True
+
+    def find_by_name(self, name):
+        with demeter.temp_session() as session:
+            ns = models.Namespace
+            return session.query(ns).filter_by(name=name).first()
