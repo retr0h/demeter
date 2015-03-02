@@ -20,72 +20,64 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import uuid
+
 from ddt import data
 from ddt import ddt
-from ddt import unpack
 import unittest2 as unittest
 
-from demeter import Address
 from demeter import Namespace
 
 
 @ddt
 class TestNamespace(unittest.TestCase):
     def setUp(self):
-        self._address = Address.Address()
         self._namespace = Namespace.Namespace()
-        self._namespace.delete_all()
 
-    @data('test-namespace')
+    @data(str(uuid.uuid4()))
     def test_create(self, name):
-        self._namespace.create(name)
+        ns = self._namespace.create(name)
 
         result = self._namespace.find_by_name(name)
-        self.assertEquals('test-namespace', result.name)
+        self.assertEquals(name, result.name)
 
-    @unpack
-    @data(
-        ('test-namespace', 'test-parentless', '198.51.100.0/24',
-         '198.51.100.1', 'test-hostname')
-    )
-    # @data('test-namespace')
-    def test_delete_all_removes_orphans(self,
-                                        ns_name,
-                                        ns_parentless,
-                                        cidr,
-                                        address,
-                                        hostname):
-        self._namespace.create(ns_name)
-        self._namespace.create(ns_parentless)
-        self._address.create(cidr, address, hostname, ns_name)
+        self._namespace.delete(ns)
 
-        self._namespace.delete_all()
+    @data(str(uuid.uuid4()))
+    def test_delete(self, name):
+        ns = self._namespace.create(name)
 
-        result = self._namespace.find_by_name(ns_parentless)
-        assert not result
-        result = self._namespace.find_by_name(ns_name)
+        result = self._namespace.delete(ns)
         assert result
+        result = self._namespace.find_by_name(name)
+        assert not result
 
-    @data('test-namespace')
+        self._namespace.delete(ns)
+
+    @data(str(uuid.uuid4()))
     def test_delete_by_name(self, name):
-        self._namespace.create(name)
+        ns = self._namespace.create(name)
 
         result = self._namespace.delete_by_name(name)
         assert result
 
-    @data('invalid')
+        self._namespace.delete(ns)
+
+    @data('ns-not-found')
     def test_delete_by_name_is_false_when_not_found(self, name):
         result = self._namespace.delete_by_name(name)
         assert not result
 
-    @data('test-namespace')
+    @data(str(uuid.uuid4()))
     def test_find_by_name(self, name):
-        self._namespace.create(name)
+        ns = self._namespace.create(name)
 
         result = self._namespace.find_by_name(name)
-        self.assertEquals('test-namespace', result.name)
+        self.assertEquals(name, result.name)
 
-    @data('invalid')
+        self._namespace.delete(ns)
+
+    @data('ns-not-found')
     def test_find_by_name_is_false_when_not_found(self, name):
         result = self._namespace.find_by_name(name)
         assert not result

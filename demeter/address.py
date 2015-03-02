@@ -43,12 +43,10 @@ class Address(object):
                 session.add(addr)
                 return addr
 
-    def delete_all(self):
-        """ Performs a cascading delete """
+    def delete(self, address):
         with demeter.transactional_session() as session:
-            addresses = session.query(models.Ipv4Address).all()
-            for address in addresses:
-                session.delete(address)
+            session.delete(address)
+            return True
 
     def find_by_ns_and_cidr(self, ns_name, cidr):
         with demeter.temp_session() as session:

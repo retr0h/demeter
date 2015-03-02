@@ -37,7 +37,7 @@ class TestModels(unittest.TestCase):
 
     @data(
         ('namespaces', 'id', 'INTEGER', 'False'),
-        ('namespaces', 'name', 'VARCHAR(16)', 'False'),
+        ('namespaces', 'name', 'VARCHAR(36)', 'False'),
         ('ipv4_addresses', 'id', 'INTEGER', 'False'),
         ('ipv4_addresses', 'cidr', 'CIDR', 'False'),
         ('ipv4_addresses', 'address', 'INET', 'False'),

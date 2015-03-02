@@ -19,7 +19,7 @@ def upgrade():
     op.create_table(
         'namespaces',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('name', sa.String(16), nullable=False),
+        sa.Column('name', sa.String(36), nullable=False),
 
         sa.UniqueConstraint('name', name='name_uix'),
     )
