@@ -26,13 +26,13 @@ from ddt import data
 from ddt import ddt
 import unittest2 as unittest
 
-from demeter import Namespace
+from demeter.namespace import Namespace
 
 
 @ddt
 class TestNamespace(unittest.TestCase):
     def setUp(self):
-        self._namespace = Namespace.Namespace()
+        self._namespace = Namespace()
 
     @data(str(uuid.uuid4()))
     def test_create(self, name):

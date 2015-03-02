@@ -1,7 +1,13 @@
 language: python
+python: "2.7"
 install:
+  - pip install ansible==1.8.4
   - pip install tox
+  - "printf 'db ansible_ssh_host=localhost' > inventory"
 script:
+  - "ansible-playbook -i inventory vagrant/travis.yml --syntax-check"
+  - "ansible-playbook -vvvv -i inventory vagrant/travis.yml --connection=local --sudo"
   - tox
 env:
+  - TOXENV=db_up,py27
   - TOXENV=pep8
