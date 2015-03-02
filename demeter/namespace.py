@@ -32,15 +32,10 @@ class Namespace(object):
                 session.add(ns)
                 return ns
 
-    def delete_all(self):
-        """ Delete namespaces which do not have parents. """
+    def delete(self, ns):
         with demeter.transactional_session() as session:
-            namespaces = session.query(models.Namespace).all()
-            for namespace in namespaces:
-                try:
-                    namespace.address.cidr
-                except AttributeError:
-                    session.delete(namespace)
+            session.delete(ns)
+            return True
 
     def delete_by_name(self, name):
         result = self.find_by_name(name)
