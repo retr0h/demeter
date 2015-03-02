@@ -7,7 +7,6 @@
 - hosts: db
   roles:
     - role: retr0h.demeter
-      demeter_db_host: "{{ ansible_eth1['ipv4']['address'] }}"
     - role: ANXS.postgresql
       postgresql_databases:
         - name: demeter
@@ -21,9 +20,6 @@
           priv: "ALL"
       postgresql_listen_addresses:
         - localhost
-        - "{{ ansible_eth1['ipv4']['address'] }}"
-      postgresql_pg_hba_passwd_hosts:
-        - "{{ ansible_eth1['ipv4']['address'] }}/32"
   tasks:
     - apt: name={{ item }}
       with_items:

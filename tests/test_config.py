@@ -20,14 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
+
 import unittest2 as unittest
 
-from demeter import config
+from demeter.config import Config
 
 
 class TestConfig(unittest.TestCase):
-    def test_get_dburl(self):
-        result = config.get_dburl()
+    def setUp(self):
+        basedir = os.path.dirname(__file__)
+        conf = os.path.join(basedir, 'demeter.json')
+        self._config = Config(config_file=conf)
+
+    def test_dburl(self):
+        result = self._config.db_url
         expected = "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
 
         self.assertEquals(expected, result)

@@ -28,15 +28,16 @@ from ddt import unpack
 import netaddr
 import unittest2 as unittest
 
-from demeter import Address
-from demeter import Namespace
+from demeter.address import Address
+from demeter.address import NetworkNotAllowedException
+from demeter.namespace import Namespace
 
 
 @ddt
 class TestAddress(unittest.TestCase):
     def setUp(self):
-        self._address = Address.Address()
-        self._namespace = Namespace.Namespace()
+        self._address = Address()
+        self._namespace = Namespace()
 
     @unpack
     @data(
@@ -114,7 +115,7 @@ class TestAddress(unittest.TestCase):
 
     @data('198.51.100.0/22')
     def test_allowed_network_raises_on_disallowed(self, cidr):
-        with self.assertRaises(Address.NetworkNotAllowedException):
+        with self.assertRaises(NetworkNotAllowedException):
             self._address._allowed_network(cidr)
 
     # # @data(

@@ -22,7 +22,7 @@
 
 import sqlalchemy
 
-from demeter import config
+from demeter.config import Config
 
 memo = {}
 
@@ -35,6 +35,6 @@ def get_engine():
     if engine:
         return engine
     else:
-        engine = sqlalchemy.create_engine(config.get_dburl())
+        engine = sqlalchemy.create_engine(Config().db_url)
         memo['engine'] = engine
         return engine

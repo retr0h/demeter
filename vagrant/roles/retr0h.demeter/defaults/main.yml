@@ -1,0 +1,7 @@
+---
+demeter_db_driver: postgresql
+demeter_db_user: demeter_user
+demeter_db_password: pass
+demeter_db_host: "{{ ansible_lo['ipv4']['address'] }}"
+demeter_db_port: 5432
+demeter_db_name: demeter

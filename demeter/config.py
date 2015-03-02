@@ -20,6 +20,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import json
 
-def get_dburl():
-    return "postgresql://demeter_user:pass@192.168.100.11:5432/demeter"
+
+class Config(object):
+    """
+    A class which handles the configuration of demeter.
+    """
+
+    def __init__(self, **kwargs):
+        config_file = kwargs.get('config_file', '/etc/demeter.json')
+        self._config = self._get_config(config_file)
+
+    @property
+    def db_url(self):
+        c = self._config
+        db_scheme = c.get('db_scheme', 'postgresql')
+        db_user = c.get('db_user', 'demeter_user')
+        db_pass = c.get('db_pass', 'pass')
+        db_host = c.get('db_host', '192.168.100.11')
+        db_port = c.get('db_port', 5432)
+        db_name = c.get('db_name', 'demeter')
+
+        return "{0}://{1}:{2}@{3}:{4}/{5}".format(db_scheme,
+                                                  db_user,
+                                                  db_pass,
+                                                  db_host,
+                                                  db_port,
+                                                  db_name)
+
+    def _get_config(self, config_file):
+        try:
+            return json.load(open(config_file))
+        except IOError:
+            return dict()

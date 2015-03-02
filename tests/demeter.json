@@ -1,0 +1,8 @@
+{
+  "db_scheme": "postgresql",
+  "db_user": "demeter_user",
+  "db_pass": "pass",
+  "db_host": "192.168.100.11",
+  "db_port": 5432,
+  "db_name": "demeter"
+}
