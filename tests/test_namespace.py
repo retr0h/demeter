@@ -31,10 +31,13 @@ from demeter.namespace import Namespace
 
 @ddt
 class TestNamespace(unittest.TestCase):
+    def uuid():
+        return str(uuid.uuid4())
+
     def setUp(self):
         self._namespace = Namespace()
 
-    @data(str(uuid.uuid4()))
+    @data(uuid())
     def test_create(self, name):
         ns = self._namespace.create(name)
 
@@ -43,7 +46,7 @@ class TestNamespace(unittest.TestCase):
 
         self._namespace.delete(ns)
 
-    @data(str(uuid.uuid4()))
+    @data(uuid())
     def test_delete(self, name):
         ns = self._namespace.create(name)
 
@@ -54,7 +57,7 @@ class TestNamespace(unittest.TestCase):
 
         self._namespace.delete(ns)
 
-    @data(str(uuid.uuid4()))
+    @data(uuid())
     def test_delete_by_name(self, name):
         ns = self._namespace.create(name)
 
@@ -68,7 +71,7 @@ class TestNamespace(unittest.TestCase):
         result = self._namespace.delete_by_name(name)
         assert not result
 
-    @data(str(uuid.uuid4()))
+    @data(uuid())
     def test_find_by_name(self, name):
         ns = self._namespace.create(name)
 
