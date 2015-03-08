@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import socket
+import struct
+
 import netaddr
 
 import demeter
 from demeter import models
-from demeter import namespace
 
 
 class NetworkNotAllowedException(Exception):
@@ -32,13 +34,11 @@ class NetworkNotAllowedException(Exception):
 
 
 class Address(object):
-    def create(self, cidr, address, hostname, ns_name):
-        ns = namespace.Namespace().find_by_name(ns_name)
-        if ns and not self.find_by_ns_and_cidr(ns.name, cidr):
-            addr = models.Ipv4Address(cidr=cidr,
-                                      address=address,
-                                      hostname=hostname,
-                                      namespace=ns)
+    def create(self, **kwargs):
+        namespace = kwargs.get('namespace')
+        cidr = kwargs.get('cidr')
+        if namespace and not self.find_by_ns_and_cidr(namespace.name, cidr):
+            addr = models.Ipv4Address(**kwargs)
             with demeter.transactional_session() as session:
                 session.add(addr)
                 return addr
@@ -58,7 +58,7 @@ class Address(object):
     def _allowed_network(self, cidr):
         """
         Determines if the provided network is too large.  If allowed returns
-        True, otherwise raises.
+        :class:`netaddr.IPNetwork` object, otherwise raises.
 
         Currently we are scoping our "allowed" network to a /24.  This is lame
         but the IP allocation algorythim isn't very sophisticated.  Attempting
@@ -72,28 +72,42 @@ class Address(object):
         """
         ip_network = netaddr.IPNetwork(cidr)
         if ip_network.prefixlen >= 24 and ip_network.prefixlen <= 32:
-            return True
+            return ip_network
         else:
             raise NetworkNotAllowedException
 
-    # def allocate(self, namespace, cidr):
-    #     """
-    #     Populate the database with addresses from the given cidr.  Returns
-    #     True on success, otherwise the called functions raise.
+    def allocate(self, ns_name, cidr):
+        """
+        Populate the database with addresses from the given cidr.  Returns
+        True on success, otherwise the called functions raise.
 
-    #     TODO: Need to filter the cidr with rules (e.g. network, broadcast,
-    #     addresses).
+        TODO: Need to filter the cidr with rules (e.g. network, broadcast,
+        addresses).
 
-    #     :param namespace: A string containing the namespace to nest the cidr.
-    #     :param cidr: A string containing the CIDR to validate.
-    #     """
-    #     # ip_network = self._valid_network(cidr)
-    #     # if ip_network:
-    #     #     if self._allowed_network(ip_network):
-    #     #         for ip in ip_network:
-    #     #             ia = Ipv4Address(namespace=namespace,
-    #     #                              cidr=cidr,
-    #     #                              address=str(ip))
-    #     #             self._session.add(ia)
-    #     #         self._session.commit()
-    #     #         return True
+        :param ns_name: A string containing the namespace to nest the cidr.
+        :param cidr: A string containing the CIDR to validate.
+        """
+        ip_network = self._allowed_network(cidr)
+        if ip_network:
+            for ip in ip_network:
+                hostname = 'name-%s' % ip
+                addr = self.create(cidr, ip, hostname, ns_name)
+                if addr:
+                    return True
+
+    def ip2int(self, address):
+        """
+        Convert the given IPv4 address string into an integer.  Returns an
+        integer.
+
+        :param address: An IPv4 address string to be converted into an integer.
+        """
+        return struct.unpack("!I", socket.inet_aton(address))[0]
+
+    def int2ip(self, address_int):
+        """
+        Convert the given integer into a IPv4 address.  Returns a string.
+
+        :param address_int: An integer to be converted into an IPv4 address.
+        """
+        return socket.inet_ntoa(struct.pack("!I", address_int))

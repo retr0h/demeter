@@ -35,21 +35,29 @@ from demeter.namespace import Namespace
 
 @ddt
 class TestAddress(unittest.TestCase):
+    def addr_data():
+        ns_name = str(uuid.uuid4())
+        cidr = '198.51.100.0/24'
+        address = '198.51.100.1'
+        address_int = 3325256705
+        hostname = 'test-{0}'.format(ns_name)
+
+        return (ns_name, {'cidr': cidr,
+                          'address': address,
+                          'address_int': address_int,
+                          'hostname': hostname})
+
     def setUp(self):
         self._address = Address()
         self._namespace = Namespace()
 
     @unpack
-    @data(
-        (str(uuid.uuid4()), '198.51.100.0/24', '198.51.100.1', 'test-hostname')
-    )
-    def test_create_when_namespace_exists(self,
-                                          ns_name,
-                                          cidr,
-                                          address,
-                                          hostname):
-        self._namespace.create(ns_name)
-        addr = self._address.create(cidr, address, hostname, ns_name)
+    @data(addr_data())
+    def test_create_when_namespace_exists(self, ns_name, values):
+        cidr = values.get('cidr')
+        ns = self._namespace.create(ns_name)
+        values.update({'namespace': ns})
+        addr = self._address.create(**values)
 
         result = self._address.find_by_ns_and_cidr(ns_name, cidr)
         self.assertEquals(cidr, result.address.cidr)
@@ -57,24 +65,19 @@ class TestAddress(unittest.TestCase):
         self._namespace.delete(addr)
 
     @unpack
-    @data(
-        ('ns-not-found', '198.51.100.0/24', '198.51.100.1', 'invalid-hostname')
-    )
-    def test_create_is_false_when_namespace_not_found(self,
-                                                      ns_name,
-                                                      cidr,
-                                                      address,
-                                                      hostname):
-        result = self._address.create(cidr, address, hostname, ns_name)
+    @data(addr_data())
+    def test_create_false_when_namespace_not_found(self, ns_name, values):
+        values.update({'namespace': None})
+        result = self._address.create(**values)
         assert not result
 
     @unpack
-    @data(
-        (str(uuid.uuid4()), '198.51.100.0/24', '198.51.100.1', 'test-hostname')
-    )
-    def test_delete_cascades(self, ns_name, cidr, address, hostname):
-        self._namespace.create(ns_name)
-        addr = self._address.create(cidr, address, hostname, ns_name)
+    @data(addr_data())
+    def test_delete_cascades(self, ns_name, values):
+        cidr = values.get('cidr')
+        ns = self._namespace.create(ns_name)
+        values.update({'namespace': ns})
+        addr = self._address.create(**values)
         self._address.delete(addr)
 
         result = self._address.find_by_ns_and_cidr(ns_name, cidr)
@@ -83,12 +86,12 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(
-        (str(uuid.uuid4()), '198.51.100.0/24', '198.51.100.1', 'test-hostname')
-    )
-    def test_find_by_ns_and_cidr(self, ns_name, cidr, address, hostname):
-        self._namespace.create(ns_name)
-        addr = self._address.create(cidr, address, hostname, ns_name)
+    @data(addr_data())
+    def test_find_by_ns_and_cidr(self, ns_name, values):
+        cidr = values.get('cidr')
+        ns = self._namespace.create(ns_name)
+        values.update({'namespace': ns})
+        addr = self._address.create(**values)
 
         result = self._address.find_by_ns_and_cidr(ns_name, cidr)
         self.assertEquals(cidr, result.address.cidr)
@@ -97,10 +100,10 @@ class TestAddress(unittest.TestCase):
 
     @unpack
     @data(
-        ('ns-not-found', '198.51.100.0/24')
+        (None, '198.51.100.0/24')
     )
-    def test_find_by_ns_and_cidr_is_false_when_not_found(self, ns_name, cidr):
-        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
+    def test_find_by_ns_and_cidr_false_when_ns_not_found(self, ns, cidr):
+        result = self._address.find_by_ns_and_cidr(ns, cidr)
         assert not result
 
     @data('198.51.100.0/24')
@@ -118,24 +121,42 @@ class TestAddress(unittest.TestCase):
         with self.assertRaises(NetworkNotAllowedException):
             self._address._allowed_network(cidr)
 
-    # # @data(
-    # #     (24, 256),
-    # #     (25, 128),
-    # #     (26, 64),
-    # #     (27, 32),
-    # #     (28, 16),
-    # #     (29, 8),
-    # #     (30, 4),
-    # #     (31, 2),
-    # #     (32, 1),
-    # # )
-    # # @unpack
-    # # def test_allocate(self, value, expected):
-    # #     cidr = '192.168.2.0/{0}'.format(value)
-    # #     namespace = 'test_namespace_{0}'.format(value)
-    # #     self._address.allocate(namespace, cidr)
+    @data('198.51.100.1')
+    def test_ip2int(self, address):
+        result = self._address.ip2int(address)
+        self.assertEquals(3325256705, result)
 
-    # #     results = self._session.query(Ipv4Address).filter(
-    # #         Ipv4Address.namespace == namespace).all()
+    @data(3325256705)
+    def test_int2ip(self, addr_int):
+        result = self._address.int2ip(addr_int)
+        self.assertEquals('198.51.100.1', result)
 
-    # #     self.assertEquals(expected, len(results))
+    # # # # @data(
+    # # # #     # (24, 256),
+    # # # #     # (25, 128),
+    # # # #     # (26, 64),
+    # # # #     # (27, 32),
+    # # # #     # (28, 16),
+    # # # #     # (29, 8),
+    # # # #     # (30, 4),
+    # # # #     # (31, 2),
+    # # # #     (32, 1),
+    # # # # )
+    # # # # @unpack
+    # # # # def test_allocate(self, prefix, expected):
+    # # # #     cidr = '192.168.2.0/{0}'.format(prefix)
+    # # # #     ns_name = str(ns_name)
+    # # # #     self._address.allocate(ns_name, cidr)
+
+    # # # #     # results = self._session.query(Ipv4Address).filter(
+    # # # #     #     Ipv4Address.namespace == namespace).all()
+
+    # # # #     # self.assertEquals(expected, len(results))
+
+    # # # # @data(
+    # # # #     ('ns-not-found', '198.51.100.0/24')
+    # # # # )
+    # # # # @unpack
+    # # # # def test_allocate_false_when_ns_not_found(self, ns_name, cidr):
+    # # # #     result = self._address.allocate(ns_name, cidr)
+    # # # #     self.assertEquals(result, False)
