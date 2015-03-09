@@ -106,6 +106,46 @@ class TestAddress(unittest.TestCase):
         result = self._address.find_by_ns_and_address(ns, address)
         assert not result
 
+    @unpack
+    @data(addr_data())
+    def test_next_one(self, ns_name, values):
+        ns = self._namespace.create(ns_name)
+        values.update({'namespace': ns})
+        self._address.create(**values)
+
+        result = self._address.next(ns_name)
+        self.assertEquals(3325256704, result)
+
+        self._namespace.delete(ns)
+
+    @data('198.51.100.0/24')
+    def test_cidr_list(self, cidr):
+        result = self._address._cidr_list(cidr)
+        self.assertEquals(256, len(result))
+        self.assertEquals(3325256704, result[0])
+
+    @unpack
+    @data(([1, 2, 3], [1, 2, 3, 4, 5]))
+    def test_compare(self, a, b):
+        result = self._address._compare(a, b)
+        self.assertEquals(set([4, 5]), result)
+
+    @unpack
+    @data(([1, 2, 3], [2, 1, 3]))
+    def test_compare_sets_are_equal(self, a, b):
+        result = self._address._compare(a, b)
+        self.assertEquals(set([]), result)
+
+    @data((1, 2, 3, 4, 5))
+    def test_next(self, s):
+        result = self._address._next(s)
+        self.assertEquals(1, result)
+
+    @data(())
+    def test_next_set_is_empty(self, s):
+        result = self._address._next(s)
+        assert not result
+
     @data('198.51.100.0/24')
     def test_allowed_network(self, cidr):
         result = self._address._allowed_network(cidr)
@@ -116,17 +156,17 @@ class TestAddress(unittest.TestCase):
         with self.assertRaises(netaddr.AddrFormatError):
             self._address._allowed_network(cidr)
 
-    @data('198.51.100.0/22')
+    @data('198.51.100.0/15')
     def test_allowed_network_raises_on_disallowed(self, cidr):
         with self.assertRaises(NetworkNotAllowedException):
             self._address._allowed_network(cidr)
 
     @data('198.51.100.1')
     def test_ip2int(self, address):
-        result = self._address.ip2int(address)
+        result = self._address._ip2int(address)
         self.assertEquals(3325256705, result)
 
     @data(3325256705)
     def test_int2ip(self, addr_int):
-        result = self._address.int2ip(addr_int)
+        result = self._address._int2ip(addr_int)
         self.assertEquals('198.51.100.1', result)
