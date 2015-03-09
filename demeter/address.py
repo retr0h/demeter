@@ -57,7 +57,7 @@ class Address(object):
             return session.query(ns).join(ns.addresses).filter(
                 ns.name == ns_name, addr.address == address).first()
 
-    def next(self, ns_name):
+    def next(self, ns_name, hostname):
         ns = self._namespace.find_by_name(ns_name)
         if ns:
             cidr = ns.cidr
@@ -65,7 +65,13 @@ class Address(object):
                                       for a in ns.addresses]
             available_address_set = self._compare(self._cidr_list(cidr),
                                                   allocated_address_list)
-            return self._next_in_set(available_address_set)
+            if available_address_set:
+                address_int = self._next_in_set(available_address_set)
+                address = self._int2ip(address_int)
+                return self.create(address=address,
+                                   address_int=address_int,
+                                   hostname=hostname,
+                                   namespace=ns)
 
     def _cidr_list(self, cidr):
         """

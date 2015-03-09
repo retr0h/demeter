@@ -1,7 +1,7 @@
-:class:`Address`
-----------------
+:class:`Namespace`
+------------------
 
-.. autoclass:: demeter.address.Address
+.. autoclass:: demeter.address.Namespace
     :members:
     :private-members:
     :undoc-members:
