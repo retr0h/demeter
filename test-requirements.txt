@@ -4,3 +4,4 @@ mock
 sphinx
 testrepository
 unittest2
+webtest
