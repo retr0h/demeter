@@ -39,6 +39,6 @@ class Ipv4Address(Base):
     __table__ = sqlalchemy.Table('ipv4_addresses', metadata, autoload=True)
     namespace = orm.relationship('Namespace',
                                  cascade='all,delete',
-                                 backref=orm.backref('address',
+                                 backref=orm.backref('addresses',
                                                      uselist=True,
                                                      cascade='all'))

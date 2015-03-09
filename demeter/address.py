@@ -54,7 +54,7 @@ class Address(object):
         with demeter.temp_session() as session:
             ns = models.Namespace
             addr = models.Ipv4Address
-            return session.query(ns).join(ns.address).filter(
+            return session.query(ns).join(ns.addresses).filter(
                 ns.name == ns_name, addr.address == address).first()
 
     def _allowed_network(self, cidr):

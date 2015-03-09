@@ -60,7 +60,7 @@ class TestAddress(unittest.TestCase):
         addr = self._address.create(**values)
 
         result = self._address.find_by_ns_and_address(ns_name, address)
-        self.assertEquals(address, result.address[0].address)
+        self.assertEquals(address, result.addresses[0].address)
 
         self._namespace.delete(addr)
 
@@ -94,7 +94,7 @@ class TestAddress(unittest.TestCase):
         addr = self._address.create(**values)
 
         result = self._address.find_by_ns_and_address(ns_name, address)
-        self.assertEquals(address, result.address[0].address)
+        self.assertEquals(address, result.addresses[0].address)
 
         self._namespace.delete(addr)
 
