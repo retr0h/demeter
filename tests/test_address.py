@@ -57,12 +57,12 @@ class TestAddress(unittest.TestCase):
         address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
-        addr = self._address.create(**values)
+        self._address.create(**values)
 
         result = self._address.find_by_ns_and_address(ns_name, address)
         self.assertEquals(address, result.addresses[0].address)
 
-        self._namespace.delete(addr)
+        self._namespace.delete(ns)
 
     @unpack
     @data(addr_data())
@@ -77,8 +77,8 @@ class TestAddress(unittest.TestCase):
         address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
-        addr = self._address.create(**values)
-        self._address.delete(addr)
+        self._address.create(**values)
+        self._namespace.delete(ns)
 
         result = self._address.find_by_ns_and_address(ns_name, address)
         assert not result
@@ -91,12 +91,12 @@ class TestAddress(unittest.TestCase):
         address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
-        addr = self._address.create(**values)
+        self._address.create(**values)
 
         result = self._address.find_by_ns_and_address(ns_name, address)
         self.assertEquals(address, result.addresses[0].address)
 
-        self._namespace.delete(addr)
+        self._namespace.delete(ns)
 
     @unpack
     @data(
@@ -130,33 +130,3 @@ class TestAddress(unittest.TestCase):
     def test_int2ip(self, addr_int):
         result = self._address.int2ip(addr_int)
         self.assertEquals('198.51.100.1', result)
-
-    # # # # @data(
-    # # # #     # (24, 256),
-    # # # #     # (25, 128),
-    # # # #     # (26, 64),
-    # # # #     # (27, 32),
-    # # # #     # (28, 16),
-    # # # #     # (29, 8),
-    # # # #     # (30, 4),
-    # # # #     # (31, 2),
-    # # # #     (32, 1),
-    # # # # )
-    # # # # @unpack
-    # # # # def test_allocate(self, prefix, expected):
-    # # # #     cidr = '192.168.2.0/{0}'.format(prefix)
-    # # # #     ns_name = str(ns_name)
-    # # # #     self._address.allocate(ns_name, cidr)
-
-    # # # #     # results = self._session.query(Ipv4Address).filter(
-    # # # #     #     Ipv4Address.namespace == namespace).all()
-
-    # # # #     # self.assertEquals(expected, len(results))
-
-    # # # # @data(
-    # # # #     ('ns-not-found', '198.51.100.0/24')
-    # # # # )
-    # # # # @unpack
-    # # # # def test_allocate_false_when_ns_not_found(self, ns_name, cidr):
-    # # # #     result = self._address.allocate(ns_name, cidr)
-    # # # #     self.assertEquals(result, False)

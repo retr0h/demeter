@@ -78,25 +78,6 @@ class Address(object):
         else:
             raise NetworkNotAllowedException
 
-    def allocate(self, ns_name, cidr):
-        """
-        Populate the database with addresses from the given cidr.  Returns
-        True on success, otherwise the called functions raise.
-
-        TODO: Need to filter the cidr with rules (e.g. network, broadcast,
-        addresses).
-
-        :param ns_name: A string containing the namespace to nest the cidr.
-        :param cidr: A string containing the CIDR to validate.
-        """
-        ip_network = self._allowed_network(cidr)
-        if ip_network:
-            for ip in ip_network:
-                hostname = 'name-%s' % ip
-                addr = self.create(cidr, ip, hostname, ns_name)
-                if addr:
-                    return True
-
     def ip2int(self, address):
         """
         Convert the given IPv4 address string into an integer.  Returns an
