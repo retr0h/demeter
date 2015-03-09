@@ -35,27 +35,23 @@ from demeter.namespace import Namespace
 
 @ddt
 class TestAddress(unittest.TestCase):
-    def addr_data():
+    def address_data():
         ns_name = str(uuid.uuid4())
-        cidr = '198.51.100.0/24'
-        address = '198.51.100.1'
-        address_int = 3325256705
         hostname = 'test-{0}'.format(ns_name)
 
-        return (ns_name, {'cidr': cidr,
-                          'address': address,
-                          'address_int': address_int,
-                          'hostname': hostname})
+        return (ns_name, '198.51.100.0/24', {'address': '198.51.100.1',
+                                             'address_int': 3325256705,
+                                             'hostname': hostname})
 
     def setUp(self):
         self._address = Address()
         self._namespace = Namespace()
 
     @unpack
-    @data(addr_data())
-    def test_create_when_namespace_exists(self, ns_name, values):
+    @data(address_data())
+    def test_create_when_namespace_exists(self, ns_name, cidr, values):
         address = values.get('address')
-        ns = self._namespace.create(ns_name)
+        ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
 
@@ -65,17 +61,20 @@ class TestAddress(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(addr_data())
-    def test_create_false_when_namespace_not_found(self, ns_name, values):
+    @data(address_data())
+    def test_create_false_when_namespace_not_found(self,
+                                                   ns_name,
+                                                   cidr,
+                                                   values):
         values.update({'namespace': None})
         result = self._address.create(**values)
         assert not result
 
     @unpack
-    @data(addr_data())
-    def test_delete_cascades(self, ns_name, values):
+    @data(address_data())
+    def test_delete_cascades(self, ns_name, cidr, values):
         address = values.get('address')
-        ns = self._namespace.create(ns_name)
+        ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
         self._namespace.delete(ns)
@@ -86,10 +85,10 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(addr_data())
-    def test_find_by_ns_and_address(self, ns_name, values):
+    @data(address_data())
+    def test_find_by_ns_and_address(self, ns_name, cidr, values):
         address = values.get('address')
-        ns = self._namespace.create(ns_name)
+        ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
 
@@ -107,9 +106,9 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(addr_data())
-    def test_next_one(self, ns_name, values):
-        ns = self._namespace.create(ns_name)
+    @data(address_data())
+    def test_next_one(self, ns_name, cidr, values):
+        ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
 

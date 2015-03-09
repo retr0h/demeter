@@ -24,6 +24,8 @@ import uuid
 
 from ddt import data
 from ddt import ddt
+from ddt import unpack
+import netaddr
 import unittest2 as unittest
 
 from demeter.namespace import Namespace
@@ -31,24 +33,32 @@ from demeter.namespace import Namespace
 
 @ddt
 class TestNamespace(unittest.TestCase):
-    def uuid():
-        return str(uuid.uuid4())
+    def namespace_data(name=str(uuid.uuid4()), cidr='198.51.100.0/24'):
+        return (name, cidr)
 
     def setUp(self):
         self._namespace = Namespace()
 
-    @data(uuid())
-    def test_create(self, name):
-        ns = self._namespace.create(name)
+    @unpack
+    @data(namespace_data())
+    def test_create(self, name, cidr):
+        ns = self._namespace.create(name, cidr)
 
         result = self._namespace.find_by_name(name)
         self.assertEquals(name, result.name)
 
         self._namespace.delete(ns)
 
-    @data(uuid())
-    def test_delete(self, name):
-        ns = self._namespace.create(name)
+    @unpack
+    @data(namespace_data(cidr='198.51.100.0/36'))
+    def test_create_not_allowed(self, name, cidr):
+        with self.assertRaises(netaddr.AddrFormatError):
+            self._namespace.create(name, cidr)
+
+    @unpack
+    @data(namespace_data())
+    def test_delete(self, name, cidr):
+        ns = self._namespace.create(name, cidr)
 
         result = self._namespace.delete(ns)
         assert result
@@ -57,30 +67,32 @@ class TestNamespace(unittest.TestCase):
 
         self._namespace.delete(ns)
 
-    @data(uuid())
-    def test_delete_by_name(self, name):
-        ns = self._namespace.create(name)
+    @unpack
+    @data(namespace_data())
+    def test_delete_by_name(self, name, cidr):
+        ns = self._namespace.create(name, cidr)
 
         result = self._namespace.delete_by_name(name)
         assert result
 
         self._namespace.delete(ns)
 
-    @data('ns-not-found')
+    @data('name-not-found')
     def test_delete_by_name_is_false_when_not_found(self, name):
         result = self._namespace.delete_by_name(name)
         assert not result
 
-    @data(uuid())
-    def test_find_by_name(self, name):
-        ns = self._namespace.create(name)
+    @unpack
+    @data(namespace_data())
+    def test_find_by_name(self, name, cidr):
+        ns = self._namespace.create(name, cidr)
 
         result = self._namespace.find_by_name(name)
         self.assertEquals(name, result.name)
 
         self._namespace.delete(ns)
 
-    @data('ns-not-found')
+    @data('name-not-found')
     def test_find_by_name_is_false_when_not_found(self, name):
         result = self._namespace.find_by_name(name)
         assert not result

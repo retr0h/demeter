@@ -61,12 +61,10 @@ class Address(object):
         with demeter.temp_session() as session:
             ns = models.Namespace
             query = session.query(ns).join(ns.addresses).filter(
-                ns.name == ns_name).all()
-            # TODO(retr0h): should move this elsewhere?
-            cidr = query[0].addresses[0].cidr
+                ns.name == ns_name).first()
             allocated_address_list = [int(a.address_int)
-                                      for a in query[0].addresses]
-            available_address_set = self._compare(self._cidr_list(cidr),
+                                      for a in query.addresses]
+            available_address_set = self._compare(self._cidr_list(query.cidr),
                                                   allocated_address_list)
             return self._next(available_address_set)
 
