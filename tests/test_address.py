@@ -35,13 +35,15 @@ from demeter.namespace import Namespace
 
 @ddt
 class TestAddress(unittest.TestCase):
-    def address_data():
-        ns_name = str(uuid.uuid4())
-        hostname = 'test-{0}'.format(ns_name)
+    def address_data(ns_name=str(uuid.uuid4()),
+                     cidr='198.51.100.0/24',
+                     address='198.51.100.1',
+                     address_int=3325256705):
+        options = {'address': address,
+                   'address_int': address_int,
+                   'hostname': 'test-{0}'.format(ns_name)}
 
-        return (ns_name, '198.51.100.0/24', {'address': '198.51.100.1',
-                                             'address_int': 3325256705,
-                                             'hostname': hostname})
+        return (ns_name, cidr, options)
 
     def setUp(self):
         self._address = Address()
@@ -107,7 +109,7 @@ class TestAddress(unittest.TestCase):
 
     @unpack
     @data(address_data())
-    def test_next_one(self, ns_name, cidr, values):
+    def test_next(self, ns_name, cidr, values):
         ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
@@ -116,6 +118,15 @@ class TestAddress(unittest.TestCase):
         self.assertEquals(3325256704, result)
 
         self._namespace.delete(ns)
+
+    @unpack
+    @data(address_data())
+    def test_next_query_empty(self, ns_name, cidr, values):
+        ns = self._namespace.create(ns_name, cidr)
+        values.update({'namespace': ns})
+
+        result = self._address.next(ns_name)
+        assert not result
 
     @data('198.51.100.0/24')
     def test_cidr_list(self, cidr):
@@ -136,13 +147,13 @@ class TestAddress(unittest.TestCase):
         self.assertEquals(set([]), result)
 
     @data((1, 2, 3, 4, 5))
-    def test_next(self, s):
-        result = self._address._next(s)
+    def test_next_in_set(self, s):
+        result = self._address._next_in_set(s)
         self.assertEquals(1, result)
 
     @data(())
-    def test_next_set_is_empty(self, s):
-        result = self._address._next(s)
+    def test_next_in_set_is_empty(self, s):
+        result = self._address._next_in_set(s)
         assert not result
 
     @data('198.51.100.0/24')
