@@ -36,14 +36,10 @@ a4 = addr.create(**addr4)
 
 addr.delete(a3)
 
-# how to determine the gap `delete(a3)` caused.
-# we want to fill before we find largest int and +1.
 with demeter.temp_session() as session:
     ns = models.Namespace
     addr = models.Ipv4Address
-    f = session.query(ns).join(ns.addresses).filter(
-        ns.name == name).order_by(addr.address_int)
-    for k in f:
-        print k.name
-        for a in k.addresses:
-            print a.address + ' ' + ' ' + str(a.address_int)
+    q = session.query(ns).join(ns.addresses).filter(
+        ns.name == name).all()
+
+    print [int(a.address_int) for a in q[0].addresses]

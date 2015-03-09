@@ -57,15 +57,41 @@ class Address(object):
             return session.query(ns).join(ns.addresses).filter(
                 ns.name == ns_name, addr.address == address).first()
 
+    def next(self, ns_name):
+        with demeter.temp_session() as session:
+            ns = models.Namespace
+            query = session.query(ns).join(ns.addresses).filter(
+                ns.name == ns_name).all()
+            # TODO(retr0h): should move this elsewhere?
+            cidr = query[0].addresses[0].cidr
+            allocated_address_list = [int(a.address_int)
+                                      for a in query[0].addresses]
+            available_address_set = self._compare(self._cidr_list(cidr),
+                                                  allocated_address_list)
+            return self._next(available_address_set)
+
+    def _cidr_list(self, cidr):
+        """
+        Construct a list of integers from an IPv4 cidr.  Returns a list.
+
+        :param cidr: A string containing the CIDR to validate.
+        """
+        ip_network = netaddr.IPNetwork(cidr)
+        return [self._ip2int(str(ip)) for ip in ip_network]
+
+    def _compare(self, a, b):
+        return (set(a) ^ set(b))
+
+    def _next(self, s):
+        try:
+            return next(iter(s))
+        except StopIteration:
+            return None
+
     def _allowed_network(self, cidr):
         """
         Determines if the provided network is too large.  If allowed returns
         :class:`netaddr.IPNetwork` object, otherwise raises.
-
-        Currently we are scoping our "allowed" network to a /24.  This is lame
-        but the IP allocation algorythim isn't very sophisticated.  Attempting
-        to protect against allocating huge contiguous blocks of addresses in
-        the DB.
 
         :param cidr: A string containing the CIDR to validate.
         :raises: :class:`Address.NetworkNotAllowedException` when network
@@ -73,12 +99,12 @@ class Address(object):
         :raises: :class:`netaddr.AddrFormatError` when invalid cidr.
         """
         ip_network = netaddr.IPNetwork(cidr)
-        if ip_network.prefixlen >= 24 and ip_network.prefixlen <= 32:
+        if ip_network.prefixlen >= 16 and ip_network.prefixlen <= 32:
             return ip_network
         else:
             raise NetworkNotAllowedException
 
-    def ip2int(self, address):
+    def _ip2int(self, address):
         """
         Convert the given IPv4 address string into an integer.  Returns an
         integer.
@@ -87,7 +113,7 @@ class Address(object):
         """
         return struct.unpack("!I", socket.inet_aton(address))[0]
 
-    def int2ip(self, address_int):
+    def _int2ip(self, address_int):
         """
         Convert the given integer into a IPv4 address.  Returns a string.
 
