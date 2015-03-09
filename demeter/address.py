@@ -36,24 +36,26 @@ class NetworkNotAllowedException(Exception):
 class Address(object):
     def create(self, **kwargs):
         namespace = kwargs.get('namespace')
-        cidr = kwargs.get('cidr')
-        if namespace and not self.find_by_ns_and_cidr(namespace.name, cidr):
-            addr = models.Ipv4Address(**kwargs)
-            with demeter.transactional_session() as session:
-                session.add(addr)
-                return addr
+        address = kwargs.get('address')
+        if namespace:
+            ns_name = namespace.name
+            if not self.find_by_ns_and_address(ns_name, address):
+                addr = models.Ipv4Address(**kwargs)
+                with demeter.transactional_session() as session:
+                    session.add(addr)
+                    return addr
 
     def delete(self, address):
         with demeter.transactional_session() as session:
             session.delete(address)
             return True
 
-    def find_by_ns_and_cidr(self, ns_name, cidr):
+    def find_by_ns_and_address(self, ns_name, address):
         with demeter.temp_session() as session:
             ns = models.Namespace
             addr = models.Ipv4Address
             return session.query(ns).join(ns.address).filter(
-                ns.name == ns_name, addr.cidr == cidr).first()
+                ns.name == ns_name, addr.address == address).first()
 
     def _allowed_network(self, cidr):
         """

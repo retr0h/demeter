@@ -38,8 +38,7 @@ class Namespace(Base):
 class Ipv4Address(Base):
     __table__ = sqlalchemy.Table('ipv4_addresses', metadata, autoload=True)
     namespace = orm.relationship('Namespace',
-                                 cascade='all,delete-orphan',
-                                 single_parent=True,
+                                 cascade='all,delete',
                                  backref=orm.backref('address',
-                                                     uselist=False,
+                                                     uselist=True,
                                                      cascade='all'))

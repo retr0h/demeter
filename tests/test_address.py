@@ -54,13 +54,13 @@ class TestAddress(unittest.TestCase):
     @unpack
     @data(addr_data())
     def test_create_when_namespace_exists(self, ns_name, values):
-        cidr = values.get('cidr')
+        address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
         addr = self._address.create(**values)
 
-        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
-        self.assertEquals(cidr, result.address.cidr)
+        result = self._address.find_by_ns_and_address(ns_name, address)
+        self.assertEquals(address, result.address[0].address)
 
         self._namespace.delete(addr)
 
@@ -74,36 +74,36 @@ class TestAddress(unittest.TestCase):
     @unpack
     @data(addr_data())
     def test_delete_cascades(self, ns_name, values):
-        cidr = values.get('cidr')
+        address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
         addr = self._address.create(**values)
         self._address.delete(addr)
 
-        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
+        result = self._address.find_by_ns_and_address(ns_name, address)
         assert not result
         result = self._namespace.find_by_name(ns_name)
         assert not result
 
     @unpack
     @data(addr_data())
-    def test_find_by_ns_and_cidr(self, ns_name, values):
-        cidr = values.get('cidr')
+    def test_find_by_ns_and_address(self, ns_name, values):
+        address = values.get('address')
         ns = self._namespace.create(ns_name)
         values.update({'namespace': ns})
         addr = self._address.create(**values)
 
-        result = self._address.find_by_ns_and_cidr(ns_name, cidr)
-        self.assertEquals(cidr, result.address.cidr)
+        result = self._address.find_by_ns_and_address(ns_name, address)
+        self.assertEquals(address, result.address[0].address)
 
         self._namespace.delete(addr)
 
     @unpack
     @data(
-        (None, '198.51.100.0/24')
+        (None, '198.51.100.1')
     )
-    def test_find_by_ns_and_cidr_false_when_ns_not_found(self, ns, cidr):
-        result = self._address.find_by_ns_and_cidr(ns, cidr)
+    def test_find_by_ns_and_address_false_when_ns_not_found(self, ns, address):
+        result = self._address.find_by_ns_and_address(ns, address)
         assert not result
 
     @data('198.51.100.0/24')
