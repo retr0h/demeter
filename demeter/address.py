@@ -74,7 +74,8 @@ class Address(object):
         :param cidr: A string containing the CIDR to validate.
         """
         ip_network = netaddr.IPNetwork(cidr)
-        return [self._ip2int(str(ip)) for ip in ip_network]
+        return [self._ip2int(str(ip)) for ip in ip_network if
+                not (ip == ip_network.network or ip == ip_network.broadcast)]
 
     def _compare(self, a, b):
         return (set(a) ^ set(b))

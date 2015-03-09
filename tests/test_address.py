@@ -113,7 +113,7 @@ class TestAddress(unittest.TestCase):
         self._address.create(**values)
 
         result = self._address.next(ns_name)
-        self.assertEquals(3325256704, result)
+        self.assertEquals(3325256706, result)
 
         self._namespace.delete(ns)
 
@@ -124,15 +124,15 @@ class TestAddress(unittest.TestCase):
         values.update({'namespace': ns})
 
         result = self._address.next(ns_name)
-        self.assertEquals(3325256704, result)
+        self.assertEquals(3325256705, result)
 
         self._namespace.delete(ns)
 
     @data('198.51.100.0/24')
     def test_cidr_list(self, cidr):
         result = self._address._cidr_list(cidr)
-        self.assertEquals(256, len(result))
-        self.assertEquals(3325256704, result[0])
+        self.assertEquals(254, len(result))
+        self.assertEquals(3325256705, result[0])
 
     @unpack
     @data(([1, 2, 3], [1, 2, 3, 4, 5]))
