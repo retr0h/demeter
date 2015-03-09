@@ -22,12 +22,17 @@
 
 import demeter
 from demeter import models
+from demeter.address import Address
 
 
 class Namespace(object):
-    def create(self, name):
+    def __init__(self):
+        self._address = Address()
+
+    def create(self, name, cidr):
+        self._address._allowed_network(cidr)
         if not self.find_by_name(name):
-            ns = models.Namespace(name=name)
+            ns = models.Namespace(name=name, cidr=cidr)
             with demeter.transactional_session() as session:
                 session.add(ns)
                 return ns

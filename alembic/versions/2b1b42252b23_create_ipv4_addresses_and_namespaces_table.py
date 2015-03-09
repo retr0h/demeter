@@ -20,6 +20,7 @@ def upgrade():
         'namespaces',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.String(36), nullable=False),
+        sa.Column('cidr', postgresql.CIDR, nullable=False),
 
         sa.UniqueConstraint('name', name='name_uix'),
     )
@@ -27,10 +28,8 @@ def upgrade():
     op.create_table(
         'ipv4_addresses',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('cidr', postgresql.CIDR, nullable=False),
         sa.Column('address', postgresql.INET, nullable=False),
         sa.Column('address_int', sa.Numeric(10), nullable=False),
-        sa.Column('allocated', sa.Boolean, server_default='0'),
         # getconf HOST_NAME_MAX
         sa.Column('hostname', sa.String(64)),
         sa.Column('namespace_id',
