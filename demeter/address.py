@@ -62,11 +62,13 @@ class Address(object):
             ns = models.Namespace
             query = session.query(ns).join(ns.addresses).filter(
                 ns.name == ns_name).first()
-            allocated_address_list = [int(a.address_int)
-                                      for a in query.addresses]
-            available_address_set = self._compare(self._cidr_list(query.cidr),
-                                                  allocated_address_list)
-            return self._next(available_address_set)
+            if query:
+                cidr = query.cidr
+                allocated_address_list = [int(a.address_int)
+                                          for a in query.addresses]
+                available_address_set = self._compare(self._cidr_list(cidr),
+                                                      allocated_address_list)
+                return self._next_in_set(available_address_set)
 
     def _cidr_list(self, cidr):
         """
@@ -80,7 +82,7 @@ class Address(object):
     def _compare(self, a, b):
         return (set(a) ^ set(b))
 
-    def _next(self, s):
+    def _next_in_set(self, s):
         try:
             return next(iter(s))
         except StopIteration:
