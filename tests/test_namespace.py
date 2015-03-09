@@ -29,6 +29,7 @@ import netaddr
 import unittest2 as unittest
 
 from demeter.namespace import Namespace
+from demeter.namespace import NetworkNotAllowedException
 
 
 @ddt
@@ -96,3 +97,18 @@ class TestNamespace(unittest.TestCase):
     def test_find_by_name_is_false_when_not_found(self, name):
         result = self._namespace.find_by_name(name)
         assert not result
+
+    @data('198.51.100.0/24')
+    def test_allowed_cidr(self, cidr):
+        result = self._namespace._allowed_cidr(cidr)
+        assert result
+
+    @data('198.51.100.0/36')
+    def test_allowed_cidr_raises_on_invalid_cidr(self, cidr):
+        with self.assertRaises(netaddr.AddrFormatError):
+            self._namespace._allowed_cidr(cidr)
+
+    @data('198.51.100.0/15')
+    def test_allowed_cidr_raises_on_disallowed(self, cidr):
+        with self.assertRaises(NetworkNotAllowedException):
+            self._namespace._allowed_cidr(cidr)

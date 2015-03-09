@@ -25,11 +25,9 @@ import uuid
 from ddt import data
 from ddt import ddt
 from ddt import unpack
-import netaddr
 import unittest2 as unittest
 
 from demeter.address import Address
-from demeter.address import NetworkNotAllowedException
 from demeter.namespace import Namespace
 
 
@@ -126,7 +124,9 @@ class TestAddress(unittest.TestCase):
         values.update({'namespace': ns})
 
         result = self._address.next(ns_name)
-        assert not result
+        self.assertEquals(3325256704, result)
+
+        self._namespace.delete(ns)
 
     @data('198.51.100.0/24')
     def test_cidr_list(self, cidr):
@@ -155,21 +155,6 @@ class TestAddress(unittest.TestCase):
     def test_next_in_set_is_empty(self, s):
         result = self._address._next_in_set(s)
         assert not result
-
-    @data('198.51.100.0/24')
-    def test_allowed_network(self, cidr):
-        result = self._address._allowed_network(cidr)
-        assert result
-
-    @data('198.51.100.0/36')
-    def test_allowed_network_raises_on_invalid_cidr(self, cidr):
-        with self.assertRaises(netaddr.AddrFormatError):
-            self._address._allowed_network(cidr)
-
-    @data('198.51.100.0/15')
-    def test_allowed_network_raises_on_disallowed(self, cidr):
-        with self.assertRaises(NetworkNotAllowedException):
-            self._address._allowed_network(cidr)
 
     @data('198.51.100.1')
     def test_ip2int(self, address):
