@@ -41,4 +41,4 @@ class Ipv4Address(Base):
                                  cascade='all,delete',
                                  backref=orm.backref('addresses',
                                                      uselist=True,
-                                                     cascade='all'))
+                                                     cascade='delete,all'))
