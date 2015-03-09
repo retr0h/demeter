@@ -20,17 +20,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import netaddr
+
 import demeter
 from demeter import models
-from demeter.address import Address
+
+
+class NetworkNotAllowedException(Exception):
+    pass
 
 
 class Namespace(object):
-    def __init__(self):
-        self._address = Address()
-
     def create(self, name, cidr):
-        self._address._allowed_network(cidr)
+        self._allowed_cidr(cidr)
         if not self.find_by_name(name):
             ns = models.Namespace(name=name, cidr=cidr)
             with demeter.transactional_session() as session:
@@ -52,4 +54,26 @@ class Namespace(object):
     def find_by_name(self, name):
         with demeter.temp_session() as session:
             ns = models.Namespace
-            return session.query(ns).filter_by(name=name).first()
+            return session.query(ns).outerjoin(ns.addresses).filter(
+                ns.name == name).first()
+
+    def _allowed_cidr(self, cidr):
+        """
+        Determines if the provided network is too large.  If allowed returns
+        :class:`netaddr.IPNetwork` object, otherwise raises.
+
+        Not sure if I like this here.  Not sure if I like CIDR bound to
+        namespace.  Feels like it belongs in the address class, but moved
+        here to avoid circular imports, and namespace is the only class to
+        use CIDR.
+
+        :param cidr: A string containing the CIDR to validate.
+        :raises: :class:`Address.NetworkNotAllowedException` when network
+                 is outside the allowed range.
+        :raises: :class:`netaddr.AddrFormatError` when invalid cidr.
+        """
+        ip_network = netaddr.IPNetwork(cidr)
+        if ip_network.prefixlen >= 16 and ip_network.prefixlen <= 32:
+            return ip_network
+        else:
+            raise NetworkNotAllowedException

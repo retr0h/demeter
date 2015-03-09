@@ -27,13 +27,13 @@ import netaddr
 
 import demeter
 from demeter import models
-
-
-class NetworkNotAllowedException(Exception):
-    pass
+from demeter.namespace import Namespace
 
 
 class Address(object):
+    def __init__(self):
+        self._namespace = Namespace()
+
     def create(self, **kwargs):
         namespace = kwargs.get('namespace')
         address = kwargs.get('address')
@@ -58,17 +58,14 @@ class Address(object):
                 ns.name == ns_name, addr.address == address).first()
 
     def next(self, ns_name):
-        with demeter.temp_session() as session:
-            ns = models.Namespace
-            query = session.query(ns).join(ns.addresses).filter(
-                ns.name == ns_name).first()
-            if query:
-                cidr = query.cidr
-                allocated_address_list = [int(a.address_int)
-                                          for a in query.addresses]
-                available_address_set = self._compare(self._cidr_list(cidr),
-                                                      allocated_address_list)
-                return self._next_in_set(available_address_set)
+        ns = self._namespace.find_by_name(ns_name)
+        if ns:
+            cidr = ns.cidr
+            allocated_address_list = [int(a.address_int)
+                                      for a in ns.addresses]
+            available_address_set = self._compare(self._cidr_list(cidr),
+                                                  allocated_address_list)
+            return self._next_in_set(available_address_set)
 
     def _cidr_list(self, cidr):
         """
@@ -87,22 +84,6 @@ class Address(object):
             return next(iter(s))
         except StopIteration:
             return None
-
-    def _allowed_network(self, cidr):
-        """
-        Determines if the provided network is too large.  If allowed returns
-        :class:`netaddr.IPNetwork` object, otherwise raises.
-
-        :param cidr: A string containing the CIDR to validate.
-        :raises: :class:`Address.NetworkNotAllowedException` when network
-                 is outside the allowed range.
-        :raises: :class:`netaddr.AddrFormatError` when invalid cidr.
-        """
-        ip_network = netaddr.IPNetwork(cidr)
-        if ip_network.prefixlen >= 16 and ip_network.prefixlen <= 32:
-            return ip_network
-        else:
-            raise NetworkNotAllowedException
 
     def _ip2int(self, address):
         """
