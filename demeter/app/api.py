@@ -36,13 +36,19 @@ def get_index():
     return json.dumps({'success': True})
 
 
+@app.route('/v1.0/namespaces', methods=['GET'])
+def all_namespaces():
+    namespaces = Namespace().all()
+    return json.dumps({'namespace': [n.name for n in namespaces]})
+
+
 @app.route('/v1.0/namespace/<name>', methods=['DELETE'])
 def delete_namespace(name):
     namespace = Namespace()
     ns = namespace.find_by_name(name)
     Namespace().delete(ns)
 
-    return json.dumps({'success': True})
+    return json.dumps({'namespace': {'success': True}})
 
 
 @app.route('/v1.0/namespace/<name>', methods=['POST'])

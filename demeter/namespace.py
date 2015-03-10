@@ -31,6 +31,11 @@ class NetworkNotAllowedException(Exception):
 
 
 class Namespace(object):
+    def all(self):
+        with demeter.temp_session() as session:
+            ns = models.Namespace
+            return session.query(ns).all()  # needs an offset
+
     def create(self, name, cidr):
         self._allowed_cidr(cidr)
         if not self.find_by_name(name):

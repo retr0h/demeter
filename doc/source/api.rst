@@ -4,10 +4,28 @@ api
 Namespaces
 ==========
 
+All
+---
+
+/namespaces GET
+
+Response data
+
+.. code-block:: javascript
+
+    {
+      "namespace": [
+        "namespace-1",
+        "namespace-2"
+      ]
+    }
+
 Create
 ------
 
 /namespace/:name POST
+
+Request data
 
 .. code-block:: javascript
 
@@ -15,15 +33,36 @@ Create
       "cidr": "198.51.100.0/24"
     }
 
+Response data
+
+.. code-block:: javascript
+
+    {
+      "namespace": {
+        "name": "namespace-name",
+        "cidr": "198.51.100.0/24"
+      }
+    }
+
 Delete
 ------
 
-/namespace/:name
+/namespace/:name DELETE
 
-List
+Response data
+
+.. code-block:: javascript
+
+    {
+      "namespace": {
+        "success": True|False
+      }
+    }
+
+Show
 ----
 
-/namespaces
+/namespace/:name GET
 
 Address
 =======
