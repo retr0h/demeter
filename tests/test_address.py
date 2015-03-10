@@ -27,7 +27,7 @@ import unittest2 as unittest
 
 from demeter.address import Address
 from demeter.namespace import Namespace
-from demeter.tests import helper
+from tests import helper
 
 
 @ddt
