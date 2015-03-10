@@ -7,19 +7,18 @@ Namespaces
 Create
 ------
 
-/namespace POST
+/namespace/:name POST
 
 .. code-block:: javascript
 
     {
-      "name": "test-namespace",
       "cidr": "198.51.100.0/24"
     }
 
 Delete
 ------
 
-/namespace/:namespace_name
+/namespace/:name
 
 List
 ----

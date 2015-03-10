@@ -20,13 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest2 as unittest
+import uuid
+
+from ddt import data
+from ddt import ddt
+from ddt import unpack
 from flask import json
+import unittest2 as unittest
 
 import demeter.app.api as app
 
 
+@ddt
 class TestApi(unittest.TestCase):
+    def namespace_data(name=str(uuid.uuid4()), cidr='198.51.100.0/24'):
+        return (name, cidr)
+
     def setUp(self):
         self._app = app.app.test_client()
 
@@ -37,22 +46,28 @@ class TestApi(unittest.TestCase):
         self.assertEquals(200, response.status_code)
         self.assertEquals(True, data['success'])
 
-    def test_app_create_namespace(self):
-        data = '{"name": "api-test-1", "cidr": "198.51.100.0/24"}'
-        response = self._app.post('/v1.0/namespace',
+    @unpack
+    @data(namespace_data())
+    def test_app_create_namespace(self, ns_name, cidr):
+        data = json.dumps({"cidr": cidr})
+        url = '/v1.0/namespace/{0}'.format(ns_name)
+        response = self._app.post(url,
                                   content_type='application/json',
                                   data=data)
 
         resp_data = json.loads(response.data)
         self.assertEquals(200, response.status_code)
-        self.assertEquals('api-test-1', resp_data['namespace']['name'])
-        self.assertEquals('198.51.100.0/24', resp_data['namespace']['cidr'])
+        self.assertEquals(ns_name, resp_data['namespace']['name'])
+        self.assertEquals(cidr, resp_data['namespace']['cidr'])
 
         self._app.delete('/v1.0/namespace/api-test-1')
 
-    def test_app_create_namespace_returns_409_when_exists(self):
-        data = '{"name": "api-test-1", "cidr": "198.51.100.0/24"}'
-        f = lambda: self._app.post('/v1.0/namespace',
+    @unpack
+    @data(namespace_data())
+    def test_app_create_namespace_returns_409_when_exists(self, ns_name, cidr):
+        data = json.dumps({"cidr": cidr})
+        url = '/v1.0/namespace/{0}'.format(ns_name)
+        f = lambda: self._app.post(url,
                                    content_type='application/json',
                                    data=data)
         f()
