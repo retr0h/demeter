@@ -47,20 +47,27 @@ class TestApi(unittest.TestCase):
         self.assertEquals(200, response.status_code)
         self.assertEquals(True, data['success'])
 
-    def test_app_all_namespaces(self):
+    @unpack
+    @data(helper.namespace_data())
+    def test_app_all_namespaces(self, ns_name, cidr):
+        url = '/v1.0/namespace/{0}'.format(ns_name)
+        self.post(url, {"cidr": cidr})
+
         response = self._app.get('/v1.0/namespaces')
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
-        assert 0 <= len(data['namespace'])  # shitty test really
+        assert ns_name in data['namespace']
+
+        self._app.delete(url)
 
     @unpack
     @data(helper.namespace_data())
     def test_app_create_namespace(self, ns_name, cidr):
         url = '/v1.0/namespace/{0}'.format(ns_name)
         response = self.post(url, {"cidr": cidr})
-
         data = json.loads(response.data)
+
         self.assertEquals(200, response.status_code)
         self.assertEquals(ns_name, data['namespace']['name'])
         self.assertEquals(cidr, data['namespace']['cidr'])
@@ -75,5 +82,19 @@ class TestApi(unittest.TestCase):
         response = self.post(url, {"cidr": cidr})
 
         self.assertEquals(409, response.status_code)
+
+        self._app.delete(url)
+
+    @unpack
+    @data(helper.namespace_data())
+    def test_app_show_namespace(self, ns_name, cidr):
+        url = '/v1.0/namespace/{0}'.format(ns_name)
+        self.post(url, {"cidr": cidr})
+
+        response = self._app.get(url)
+        data = json.loads(response.data)
+
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(ns_name, data['namespace']['name'])
 
         self._app.delete(url)
