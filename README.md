@@ -3,6 +3,8 @@
 demeter
 =======
 
+An IPAM microservice intended to published to, and consumed by other services. 
+
 > DEMETER was the great Olympian goddess of agriculture, grain, and bread, the
   prime sustenance of mankind.
 
