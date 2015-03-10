@@ -45,11 +45,10 @@ def delete_namespace(name):
     return json.dumps({'success': True})
 
 
-@app.route('/v1.0/namespace', methods=['POST'])
-def create_namespace():
+@app.route('/v1.0/namespace/<name>', methods=['POST'])
+def create_namespace(name):
     data = request.get_json()
-    ns = Namespace().create(data.get('name'),
-                            data.get('cidr'))
+    ns = Namespace().create(name, data.get('cidr'))
     if ns:
         return json.dumps({'namespace': {'name': ns.name,
                                          'cidr': ns.cidr}})
