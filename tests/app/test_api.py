@@ -49,3 +49,15 @@ class TestApi(unittest.TestCase):
         self.assertEquals('198.51.100.0/24', resp_data['namespace']['cidr'])
 
         self._app.delete('/v1.0/namespace/api-test-1')
+
+    def test_app_create_namespace_returns_409_when_exists(self):
+        data = '{"name": "api-test-1", "cidr": "198.51.100.0/24"}'
+        f = lambda: self._app.post('/v1.0/namespace',
+                                   content_type='application/json',
+                                   data=data)
+        f()
+        response = f()
+
+        self.assertEquals(409, response.status_code)
+
+        self._app.delete('/v1.0/namespace/api-test-1')
