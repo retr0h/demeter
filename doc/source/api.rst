@@ -16,6 +16,11 @@ Create
       "cidr": "198.51.100.0/24"
     }
 
+Delete
+------
+
+/namespace/:namespace_name
+
 List
 ----
 
