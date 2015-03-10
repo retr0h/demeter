@@ -28,7 +28,7 @@ import unittest2 as unittest
 
 from demeter.namespace import Namespace
 from demeter.namespace import NetworkNotAllowedException
-from demeter.tests import helper
+from tests import helper
 
 
 @ddt

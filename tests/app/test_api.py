@@ -27,7 +27,7 @@ from flask import json
 import unittest2 as unittest
 
 from demeter.app import api as app
-from demeter.tests import helper
+from tests import helper
 
 
 @ddt
