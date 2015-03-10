@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import uuid
-
 from ddt import data
 from ddt import ddt
 from ddt import unpack
@@ -30,18 +28,16 @@ import unittest2 as unittest
 
 from demeter.namespace import Namespace
 from demeter.namespace import NetworkNotAllowedException
+from demeter.tests import helper
 
 
 @ddt
 class TestNamespace(unittest.TestCase):
-    def namespace_data(name=str(uuid.uuid4()), cidr='198.51.100.0/24'):
-        return (name, cidr)
-
     def setUp(self):
         self._namespace = Namespace()
 
     @unpack
-    @data(namespace_data())
+    @data(helper.namespace_data())
     def test_create(self, name, cidr):
         ns = self._namespace.create(name, cidr)
 
@@ -51,13 +47,13 @@ class TestNamespace(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(namespace_data(cidr='198.51.100.0/36'))
+    @data(helper.namespace_data(cidr='198.51.100.0/36'))
     def test_create_not_allowed(self, name, cidr):
         with self.assertRaises(netaddr.AddrFormatError):
             self._namespace.create(name, cidr)
 
     @unpack
-    @data(namespace_data())
+    @data(helper.namespace_data())
     def test_delete(self, name, cidr):
         ns = self._namespace.create(name, cidr)
 
@@ -69,7 +65,7 @@ class TestNamespace(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(namespace_data())
+    @data(helper.namespace_data())
     def test_delete_by_name(self, name, cidr):
         ns = self._namespace.create(name, cidr)
 
@@ -84,7 +80,7 @@ class TestNamespace(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(namespace_data())
+    @data(helper.namespace_data())
     def test_find_by_name(self, name, cidr):
         ns = self._namespace.create(name, cidr)
 

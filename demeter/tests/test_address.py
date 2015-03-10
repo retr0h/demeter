@@ -20,8 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import uuid
-
 from ddt import data
 from ddt import ddt
 from ddt import unpack
@@ -29,26 +27,17 @@ import unittest2 as unittest
 
 from demeter.address import Address
 from demeter.namespace import Namespace
+from demeter.tests import helper
 
 
 @ddt
 class TestAddress(unittest.TestCase):
-    def address_data(ns_name=str(uuid.uuid4()),
-                     cidr='198.51.100.0/24',
-                     address='198.51.100.1',
-                     address_int=3325256705):
-        options = {'address': address,
-                   'address_int': address_int,
-                   'hostname': 'test-{0}'.format(ns_name)}
-
-        return (ns_name, cidr, options)
-
     def setUp(self):
         self._address = Address()
         self._namespace = Namespace()
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_create_when_namespace_exists(self, ns_name, cidr, values):
         address = values.get('address')
         ns = self._namespace.create(ns_name, cidr)
@@ -61,7 +50,7 @@ class TestAddress(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_create_false_when_namespace_not_found(self,
                                                    ns_name,
                                                    cidr,
@@ -71,7 +60,7 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_delete_cascades(self, ns_name, cidr, values):
         address = values.get('address')
         ns = self._namespace.create(ns_name, cidr)
@@ -85,7 +74,7 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_find_by_ns_and_address(self, ns_name, cidr, values):
         address = values.get('address')
         ns = self._namespace.create(ns_name, cidr)
@@ -106,7 +95,7 @@ class TestAddress(unittest.TestCase):
         assert not result
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_next(self, ns_name, cidr, values):
         hostname = values.get('hostname')
         ns = self._namespace.create(ns_name, cidr)
@@ -119,7 +108,7 @@ class TestAddress(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(address_data())
+    @data(helper.address_data())
     def test_next_when_none_used(self, ns_name, cidr, values):
         hostname = values.get('hostname')
         ns = self._namespace.create(ns_name, cidr)
@@ -131,7 +120,7 @@ class TestAddress(unittest.TestCase):
         self._namespace.delete(ns)
 
     @unpack
-    @data(address_data(cidr='198.51.100.1/32', address='198.51.100.1'))
+    @data(helper.address_data(cidr='198.51.100.1/32', address='198.51.100.1'))
     def test_next_when_none_free(self, ns_name, cidr, values):
         hostname = values.get('hostname')
         ns = self._namespace.create(ns_name, cidr)
