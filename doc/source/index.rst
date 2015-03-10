@@ -1,5 +1,5 @@
 demeter
-=====
+=======
 
 TODO
 
@@ -37,6 +37,11 @@ Contents:
    :maxdepth: 2
 
    address
+   api
+   client
+   config
+   models
+   namespace
 
 Indices and tables
 ==================

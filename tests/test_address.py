@@ -108,23 +108,37 @@ class TestAddress(unittest.TestCase):
     @unpack
     @data(address_data())
     def test_next(self, ns_name, cidr, values):
+        hostname = values.get('hostname')
         ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
         self._address.create(**values)
 
-        result = self._address.next(ns_name)
-        self.assertEquals(3325256706, result)
+        result = self._address.next(ns_name, hostname)
+        self.assertEquals(3325256706, result.address_int)
 
         self._namespace.delete(ns)
 
     @unpack
     @data(address_data())
-    def test_next_query_empty(self, ns_name, cidr, values):
+    def test_next_when_none_used(self, ns_name, cidr, values):
+        hostname = values.get('hostname')
         ns = self._namespace.create(ns_name, cidr)
         values.update({'namespace': ns})
 
-        result = self._address.next(ns_name)
-        self.assertEquals(3325256705, result)
+        result = self._address.next(ns_name, hostname)
+        self.assertEquals(3325256705, result.address_int)
+
+        self._namespace.delete(ns)
+
+    @unpack
+    @data(address_data(cidr='198.51.100.1/32', address='198.51.100.1'))
+    def test_next_when_none_free(self, ns_name, cidr, values):
+        hostname = values.get('hostname')
+        ns = self._namespace.create(ns_name, cidr)
+        values.update({'namespace': ns})
+
+        result = self._address.next(ns_name, hostname)
+        assert not result
 
         self._namespace.delete(ns)
 

@@ -1,7 +1,7 @@
-:class:`Address`
-----------------
+:class:`Config`
+---------------
 
-.. autoclass:: demeter.address.Address
+.. autoclass:: demeter.config.Config
     :members:
     :private-members:
     :undoc-members:

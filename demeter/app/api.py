@@ -22,6 +22,10 @@
 
 from flask import Flask
 from flask import json
+from flask import request
+
+from demeter.namespace import Namespace
+from demeter.address import Address
 
 
 app = Flask(__name__)
@@ -30,6 +34,20 @@ app = Flask(__name__)
 @app.route('/v1.0/status', methods=['GET'])
 def get_index():
     return json.dumps({'success': True})
+
+
+@app.route('/v1.0/address', methods=['POST'])
+def address_create():
+    """ Testing general workflow """
+    data = request.get_json()
+
+    namespace = data.get('namespace')
+    cidr = data.get('cidr')
+    hostname = data.get('hostname')
+
+    Namespace().create(namespace, cidr)
+    a = Address().next(namespace, hostname)
+    return json.dumps({'address': a.address})
 
 
 def run():
