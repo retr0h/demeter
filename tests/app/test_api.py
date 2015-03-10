@@ -36,3 +36,16 @@ class TestApi(unittest.TestCase):
 
         self.assertEquals(200, response.status_code)
         self.assertEquals(True, data['success'])
+
+    def test_app_create_namespace(self):
+        data = '{"name": "api-test-1", "cidr": "198.51.100.0/24"}'
+        response = self._app.post('/v1.0/namespace',
+                                  content_type='application/json',
+                                  data=data)
+
+        resp_data = json.loads(response.data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals('api-test-1', resp_data['namespace']['name'])
+        self.assertEquals('198.51.100.0/24', resp_data['namespace']['cidr'])
+
+        self._app.delete('/v1.0/namespace/api-test-1')

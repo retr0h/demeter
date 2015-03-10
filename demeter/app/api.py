@@ -36,8 +36,29 @@ def get_index():
     return json.dumps({'success': True})
 
 
+@app.route('/v1.0/namespace/<name>', methods=['DELETE'])
+def delete_namespace(name):
+    namespace = Namespace()
+    ns = namespace.find_by_name(name)
+    Namespace().delete(ns)
+
+    return json.dumps({'success': True})
+
+
+@app.route('/v1.0/namespace', methods=['POST'])
+def create_namespace():
+    data = request.get_json()
+    ns = Namespace().create(data.get('name'),
+                            data.get('cidr'))
+    if ns:
+        return json.dumps({'namespace': {'name': ns.name,
+                                         'cidr': ns.cidr}})
+    else:
+        return json.dumps({}), 409
+
+
 @app.route('/v1.0/address', methods=['POST'])
-def address_create():
+def create_address():
     """ Testing general workflow """
     data = request.get_json()
 
