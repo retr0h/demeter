@@ -38,6 +38,22 @@ class TestNamespace(unittest.TestCase):
 
     @unpack
     @data(helper.namespace_data())
+    def test_all(self, name, cidr):
+        ns = self._namespace.create(name, cidr)
+
+        result = self._namespace.all()
+        self.assertEquals(1, len(result))
+
+        self._namespace.delete(ns)
+
+    @unpack
+    @data(helper.namespace_data())
+    def test_all_is_empty(self, name, cidr):
+        result = self._namespace.all()
+        self.assertEquals([], result)
+
+    @unpack
+    @data(helper.namespace_data())
     def test_create(self, name, cidr):
         ns = self._namespace.create(name, cidr)
 
