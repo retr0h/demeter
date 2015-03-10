@@ -35,6 +35,11 @@ class TestApi(unittest.TestCase):
     def setUp(self):
         self._app = app.app.test_client()
 
+    def post(self, url, data):
+        return self._app.post(url,
+                              content_type='application/json',
+                              data=json.dumps(data))
+
     def test_app_index(self):
         response = self._app.get('/v1.0/status')
         data = json.loads(response.data)
@@ -42,33 +47,33 @@ class TestApi(unittest.TestCase):
         self.assertEquals(200, response.status_code)
         self.assertEquals(True, data['success'])
 
+    def test_app_all_namespaces(self):
+        response = self._app.get('/v1.0/namespaces')
+        data = json.loads(response.data)
+
+        self.assertEquals(200, response.status_code)
+        assert 0 <= len(data['namespace'])  # shitty test really
+
     @unpack
     @data(helper.namespace_data())
     def test_app_create_namespace(self, ns_name, cidr):
-        data = json.dumps({"cidr": cidr})
         url = '/v1.0/namespace/{0}'.format(ns_name)
-        response = self._app.post(url,
-                                  content_type='application/json',
-                                  data=data)
+        response = self.post(url, {"cidr": cidr})
 
-        resp_data = json.loads(response.data)
+        data = json.loads(response.data)
         self.assertEquals(200, response.status_code)
-        self.assertEquals(ns_name, resp_data['namespace']['name'])
-        self.assertEquals(cidr, resp_data['namespace']['cidr'])
+        self.assertEquals(ns_name, data['namespace']['name'])
+        self.assertEquals(cidr, data['namespace']['cidr'])
 
-        self._app.delete('/v1.0/namespace/api-test-1')
+        self._app.delete(url)
 
     @unpack
     @data(helper.namespace_data())
     def test_app_create_namespace_returns_409_when_exists(self, ns_name, cidr):
-        data = json.dumps({"cidr": cidr})
         url = '/v1.0/namespace/{0}'.format(ns_name)
-        f = lambda: self._app.post(url,
-                                   content_type='application/json',
-                                   data=data)
-        f()
-        response = f()
+        self.post(url, {"cidr": cidr})
+        response = self.post(url, {"cidr": cidr})
 
         self.assertEquals(409, response.status_code)
 
-        self._app.delete('/v1.0/namespace/api-test-1')
+        self._app.delete(url)
