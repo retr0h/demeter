@@ -35,16 +35,21 @@ from tests import helper
 class TestNamespace(unittest.TestCase):
     def setUp(self):
         self._namespace = Namespace()
+        self._name, self._cidr = helper.namespace_data()
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_all(self, name, cidr):
-        ns = self._namespace.create(name, cidr)
+    def setup_teardown_namespace(func):
+        def wrapper(self, *args, **kwargs):
+            ns = self._namespace.create(self._name, self._cidr)
 
+            func(self, *args, **kwargs)
+
+            self._namespace.delete(ns)
+        return wrapper
+
+    @setup_teardown_namespace
+    def test_all(self):
         result = self._namespace.all()
         self.assertEquals(1, len(result))
-
-        self._namespace.delete(ns)
 
     @unpack
     @data(helper.namespace_data())
@@ -95,15 +100,10 @@ class TestNamespace(unittest.TestCase):
         result = self._namespace.delete_by_name(name)
         assert not result
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_find_by_name(self, name, cidr):
-        ns = self._namespace.create(name, cidr)
-
-        result = self._namespace.find_by_name(name)
-        self.assertEquals(name, result.name)
-
-        self._namespace.delete(ns)
+    @setup_teardown_namespace
+    def test_find_by_name(self):
+        result = self._namespace.find_by_name(self._name)
+        self.assertEquals(self._name, result.name)
 
     @data('name-not-found')
     def test_find_by_name_is_false_when_not_found(self, name):
