@@ -34,11 +34,32 @@ from tests import helper
 class TestApi(unittest.TestCase):
     def setUp(self):
         self._app = app.app.test_client()
+        self._ns_name, self._ns_cidr = helper.namespace_data()
 
-    def post(self, url, data):
+    def _create_namespace(self, ns_name, cidr):
+        url = self.namespace_url(ns_name)
+        return self._post(url, {"cidr": cidr})
+
+    def _delete_namespace(self, url):
+        url = self.namespace_url(self._ns_name)
+        return self._app.delete(url)
+
+    def _post(self, url, data):
         return self._app.post(url,
                               content_type='application/json',
                               data=json.dumps(data))
+
+    def setup_teardown_namespace(func):
+        def wrapper(self, *args, **kwargs):
+            self._create_namespace(self._ns_name, self._ns_cidr)
+
+            func(self, *args, **kwargs)
+
+            self._delete_namespace(self._ns_name)
+        return wrapper
+
+    def namespace_url(self, ns_name):
+        return '/v1.0/namespace/{0}'.format(ns_name)
 
     def test_app_index(self):
         response = self._app.get('/v1.0/status')
@@ -47,54 +68,42 @@ class TestApi(unittest.TestCase):
         self.assertEquals(200, response.status_code)
         self.assertEquals(True, data['success'])
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_app_all_namespaces(self, ns_name, cidr):
-        url = '/v1.0/namespace/{0}'.format(ns_name)
-        self.post(url, {"cidr": cidr})
-
+    @setup_teardown_namespace
+    def test_app_all_namespaces(self):
         response = self._app.get('/v1.0/namespaces')
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
-        assert ns_name in data['namespace']
-
-        self._app.delete(url)
+        assert self._ns_name in data['namespace']
 
     @unpack
     @data(helper.namespace_data())
     def test_app_create_namespace(self, ns_name, cidr):
-        url = '/v1.0/namespace/{0}'.format(ns_name)
-        response = self.post(url, {"cidr": cidr})
+        response = self._create_namespace(ns_name, cidr)
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
         self.assertEquals(ns_name, data['namespace']['name'])
         self.assertEquals(cidr, data['namespace']['cidr'])
 
-        self._app.delete(url)
+        self._delete_namespace(ns_name)
 
     @unpack
     @data(helper.namespace_data())
     def test_app_create_namespace_returns_409_when_exists(self, ns_name, cidr):
-        url = '/v1.0/namespace/{0}'.format(ns_name)
-        self.post(url, {"cidr": cidr})
-        response = self.post(url, {"cidr": cidr})
+        self._create_namespace(ns_name, cidr)
+        response = self._create_namespace(ns_name, cidr)
 
         self.assertEquals(409, response.status_code)
 
-        self._app.delete(url)
+        self._delete_namespace(ns_name)
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_app_show_namespace(self, ns_name, cidr):
-        url = '/v1.0/namespace/{0}'.format(ns_name)
-        self.post(url, {"cidr": cidr})
-
+    @setup_teardown_namespace
+    def test_app_show_namespace(self):
+        url = self.namespace_url(self._ns_name)
+        # TODO(retr0h): populate address
         response = self._app.get(url)
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
-        self.assertEquals(ns_name, data['namespace']['name'])
-
-        self._app.delete(url)
+        self.assertEquals(self._ns_name, data['namespace']['name'])

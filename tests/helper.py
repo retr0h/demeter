@@ -23,8 +23,16 @@
 import uuid
 
 
-def address_data(ns_name=str(uuid.uuid4()),
-                 cidr='198.51.100.0/24',
+def ns_name():
+    return str(uuid.uuid4())
+
+
+def ns_cidr():
+    return '198.51.100.0/24'
+
+
+def address_data(ns_name=ns_name(),
+                 cidr=ns_cidr(),
                  address='198.51.100.1',
                  address_int=3325256705):
     options = {'address': address,
@@ -34,5 +42,5 @@ def address_data(ns_name=str(uuid.uuid4()),
     return (ns_name, cidr, options)
 
 
-def namespace_data(name=str(uuid.uuid4()), cidr='198.51.100.0/24'):
+def namespace_data(name=ns_name(), cidr=ns_cidr()):
     return (name, cidr)
