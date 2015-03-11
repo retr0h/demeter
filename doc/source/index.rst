@@ -31,6 +31,13 @@ Execute unit tests:
 
 	$ make test
 
+Execute a single test:
+
+.. code-block:: bash
+
+    $ source .tox/py27/bin/activate
+    $ python -m testtools.run tests/app/test_api.py
+
 Contents:
 
 .. toctree::

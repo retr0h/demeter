@@ -62,6 +62,20 @@ def create_namespace(name):
         return json.dumps({}), 409
 
 
+@app.route('/v1.0/namespace/<name>', methods=['GET'])
+def show_namespace(name):
+    ns = Namespace().find_by_name(name)
+    if ns.addresses:
+        addresses = [{'hostname': a.hostname, 'address': a.address}
+                     for a in ns.addresses]
+    else:
+        addresses = []
+
+    return json.dumps({'namespace': {'name': ns.name,
+                                     'cidr': ns.cidr,
+                                     'addresses': [addresses]}})
+
+
 @app.route('/v1.0/address', methods=['POST'])
 def create_address():
     """ Testing general workflow """

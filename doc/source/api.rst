@@ -64,6 +64,22 @@ Show
 
 /namespace/:name GET
 
+Response data
+
+.. code-block:: javascript
+
+    {
+      "namespace": {
+        "name": "namespace-name",
+        "cidr": "198.51.100.0/24",
+        "addresses": [
+          {
+            "hostname", "test-hostname", "address": "198.51.100.1"
+          }
+        ]
+      }
+    }
+
 Address
 =======
 
