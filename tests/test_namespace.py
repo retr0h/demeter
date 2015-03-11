@@ -57,15 +57,10 @@ class TestNamespace(unittest.TestCase):
         result = self._namespace.all()
         self.assertEquals([], result)
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_create(self, name, cidr):
-        ns = self._namespace.create(name, cidr)
-
-        result = self._namespace.find_by_name(name)
-        self.assertEquals(name, result.name)
-
-        self._namespace.delete(ns)
+    @setup_teardown_namespace
+    def test_create(self):
+        result = self._namespace.find_by_name(self._name)
+        self.assertEquals(self._name, result.name)
 
     @unpack
     @data(helper.namespace_data(cidr='198.51.100.0/36'))
