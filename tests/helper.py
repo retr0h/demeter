@@ -31,16 +31,21 @@ def ns_cidr():
     return '198.51.100.0/24'
 
 
+def ns_family():
+    return 'inet'
+
+
 def address_data(ns_name=ns_name(),
                  cidr=ns_cidr(),
+                 family=ns_family(),
                  address='198.51.100.1',
                  address_int=3325256705):
     options = {'address': address,
                'address_int': address_int,
                'hostname': 'test-{0}'.format(ns_name)}
 
-    return (ns_name, cidr, options)
+    return (ns_name, cidr, family, options)
 
 
-def namespace_data(name=ns_name(), cidr=ns_cidr()):
-    return (name, cidr)
+def namespace_data(name=ns_name(), cidr=ns_cidr(), family=ns_family()):
+    return (name, cidr, family)

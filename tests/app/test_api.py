@@ -34,11 +34,11 @@ from tests import helper
 class TestApi(unittest.TestCase):
     def setUp(self):
         self._app = app.app.test_client()
-        self._ns_name, self._ns_cidr = helper.namespace_data()
+        self._ns_name, self._ns_cidr, self._family = helper.namespace_data()
 
-    def _create_namespace(self, ns_name, cidr):
+    def _create_namespace(self, ns_name, cidr, family):
         url = self.namespace_url(ns_name)
-        return self._post(url, {"cidr": cidr})
+        return self._post(url, {'cidr': cidr, 'family': family})
 
     def _delete_namespace(self, url):
         url = self.namespace_url(self._ns_name)
@@ -51,7 +51,7 @@ class TestApi(unittest.TestCase):
 
     def setup_teardown_namespace(func):
         def wrapper(self, *args, **kwargs):
-            self._create_namespace(self._ns_name, self._ns_cidr)
+            self._create_namespace(self._ns_name, self._ns_cidr, self._family)
 
             func(self, *args, **kwargs)
 
@@ -78,21 +78,25 @@ class TestApi(unittest.TestCase):
 
     @unpack
     @data(helper.namespace_data())
-    def test_app_create_namespace(self, ns_name, cidr):
-        response = self._create_namespace(ns_name, cidr)
+    def test_app_create_namespace(self, ns_name, cidr, family):
+        response = self._create_namespace(ns_name, cidr, family)
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
         self.assertEquals(ns_name, data['namespace']['name'])
         self.assertEquals(cidr, data['namespace']['cidr'])
+        self.assertEquals('inet', data['namespace']['family'])
 
         self._delete_namespace(ns_name)
 
     @unpack
     @data(helper.namespace_data())
-    def test_app_create_namespace_returns_409_when_exists(self, ns_name, cidr):
-        self._create_namespace(ns_name, cidr)
-        response = self._create_namespace(ns_name, cidr)
+    def test_app_create_namespace_returns_409_when_exists(self,
+                                                          ns_name,
+                                                          cidr,
+                                                          family):
+        self._create_namespace(ns_name, cidr, family)
+        response = self._create_namespace(ns_name, cidr, family)
 
         self.assertEquals(409, response.status_code)
 
@@ -107,3 +111,5 @@ class TestApi(unittest.TestCase):
 
         self.assertEquals(200, response.status_code)
         self.assertEquals(self._ns_name, data['namespace']['name'])
+        self.assertEquals('198.51.100.0/24', data['namespace']['cidr'])
+        self.assertEquals('inet', data['namespace']['family'])

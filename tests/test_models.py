@@ -39,6 +39,7 @@ class TestModels(unittest.TestCase):
         ('namespaces', 'id', 'INTEGER', 'False'),
         ('namespaces', 'name', 'VARCHAR(36)', 'False'),
         ('namespaces', 'cidr', 'CIDR', 'False'),
+        ('namespaces', 'family', 'VARCHAR(5)', 'False'),
         ('ipv4_addresses', 'id', 'INTEGER', 'False'),
         ('ipv4_addresses', 'address', 'INET', 'False'),
         ('ipv4_addresses', 'address_int', 'NUMERIC(10, 0)', 'False'),
