@@ -24,6 +24,7 @@ from ddt import data
 from ddt import ddt
 from ddt import unpack
 from flask import json
+from flask import url_for
 import unittest2 as unittest
 
 from demeter.app import api as app
@@ -37,17 +38,25 @@ class TestApi(unittest.TestCase):
         self._ns_name, self._ns_cidr, self._family = helper.namespace_data()
 
     def _create_namespace(self, ns_name, cidr, family):
-        url = self.namespace_url(ns_name)
+        url = self._namespace_url('create_namespace', ns_name)
         return self._post(url, {'cidr': cidr, 'family': family})
 
-    def _delete_namespace(self, url):
-        url = self.namespace_url(self._ns_name)
+    def _delete_namespace(self, ns_name):
+        url = self._namespace_url('delete_namespace', ns_name)
         return self._app.delete(url)
+
+    def _get_namespace(self, ns_name):
+        url = self._namespace_url('show_namespace', ns_name)
+        return self._app.get(url)
 
     def _post(self, url, data):
         return self._app.post(url,
                               content_type='application/json',
                               data=json.dumps(data))
+
+    def _namespace_url(self, endpoint, name):
+        with app.app.test_request_context():
+            return url_for(endpoint, name=name)
 
     def setup_teardown_namespace(func):
         def wrapper(self, *args, **kwargs):
@@ -57,9 +66,6 @@ class TestApi(unittest.TestCase):
 
             self._delete_namespace(self._ns_name)
         return wrapper
-
-    def namespace_url(self, ns_name):
-        return '/v1.0/namespace/{0}'.format(ns_name)
 
     def test_app_index(self):
         response = self._app.get('/v1.0/status')
@@ -76,18 +82,15 @@ class TestApi(unittest.TestCase):
         self.assertEquals(200, response.status_code)
         assert self._ns_name in data['namespace']
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_app_create_namespace(self, ns_name, cidr, family):
-        response = self._create_namespace(ns_name, cidr, family)
+    @setup_teardown_namespace
+    def test_app_create_namespace(self):
+        response = self._get_namespace(self._ns_name)
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
-        self.assertEquals(ns_name, data['namespace']['name'])
-        self.assertEquals(cidr, data['namespace']['cidr'])
+        self.assertEquals(self._ns_name, data['namespace']['name'])
+        self.assertEquals(self._ns_cidr, data['namespace']['cidr'])
         self.assertEquals('inet', data['namespace']['family'])
-
-        self._delete_namespace(ns_name)
 
     @unpack
     @data(helper.namespace_data())
@@ -104,9 +107,7 @@ class TestApi(unittest.TestCase):
 
     @setup_teardown_namespace
     def test_app_show_namespace(self):
-        url = self.namespace_url(self._ns_name)
-        # TODO(retr0h): populate address
-        response = self._app.get(url)
+        response = self._get_namespace(self._ns_name)
         data = json.loads(response.data)
 
         self.assertEquals(200, response.status_code)
