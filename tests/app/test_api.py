@@ -20,9 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ddt import data
 from ddt import ddt
-from ddt import unpack
 from flask import json
 from flask import url_for
 import unittest2 as unittest
@@ -92,18 +90,13 @@ class TestApi(unittest.TestCase):
         self.assertEquals(self._ns_cidr, data['namespace']['cidr'])
         self.assertEquals('inet', data['namespace']['family'])
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_app_create_namespace_returns_409_when_exists(self,
-                                                          ns_name,
-                                                          cidr,
-                                                          family):
-        self._create_namespace(ns_name, cidr, family)
-        response = self._create_namespace(ns_name, cidr, family)
+    @setup_teardown_namespace
+    def test_app_create_namespace_returns_409_when_exists(self):
+        response = self._create_namespace(self._ns_name,
+                                          self._ns_cidr,
+                                          self._family)
 
         self.assertEquals(409, response.status_code)
-
-        self._delete_namespace(ns_name)
 
     @setup_teardown_namespace
     def test_app_show_namespace(self):
