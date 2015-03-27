@@ -36,10 +36,10 @@ class Namespace(object):
             ns = models.Namespace
             return session.query(ns).all()  # needs an offset
 
-    def create(self, name, cidr):
+    def create(self, name, cidr, family):
         self._allowed_cidr(cidr)
         if not self.find_by_name(name):
-            ns = models.Namespace(name=name, cidr=cidr)
+            ns = models.Namespace(name=name, cidr=cidr, family=family)
             with demeter.transactional_session() as session:
                 session.add(ns)
                 return ns

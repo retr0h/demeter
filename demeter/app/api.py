@@ -54,10 +54,13 @@ def delete_namespace(name):
 @app.route('/v1.0/namespace/<name>', methods=['POST'])
 def create_namespace(name):
     data = request.get_json()
-    ns = Namespace().create(name, data.get('cidr'))
+    cidr = data.get('cidr')
+    family = data.get('family')
+    ns = Namespace().create(name, cidr, family)
     if ns:
         return json.dumps({'namespace': {'name': ns.name,
-                                         'cidr': ns.cidr}})
+                                         'cidr': ns.cidr,
+                                         'family': ns.family}})
     else:
         return json.dumps({}), 409
 
@@ -73,6 +76,7 @@ def show_namespace(name):
 
     return json.dumps({'namespace': {'name': ns.name,
                                      'cidr': ns.cidr,
+                                     'family': ns.family,
                                      'addresses': [addresses]}})
 
 

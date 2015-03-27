@@ -13,6 +13,8 @@ Response data
 
 .. code-block:: javascript
 
+# FAMILY?
+
     {
       "namespace": [
         "namespace-1",
@@ -30,7 +32,8 @@ Request data
 .. code-block:: javascript
 
     {
-      "cidr": "198.51.100.0/24"
+      "cidr": "198.51.100.0/24",
+      "family": "inet"
     }
 
 Response data
@@ -40,7 +43,8 @@ Response data
     {
       "namespace": {
         "name": "namespace-name",
-        "cidr": "198.51.100.0/24"
+        "cidr": "198.51.100.0/24",
+        "family": "inet"
       }
     }
 
@@ -72,9 +76,11 @@ Response data
       "namespace": {
         "name": "namespace-name",
         "cidr": "198.51.100.0/24",
+        "family": "inet",
         "addresses": [
           {
-            "hostname", "test-hostname", "address": "198.51.100.1"
+            "hostname", "test-hostname",
+            "address": "198.51.100.1"
           }
         ]
       }
@@ -83,18 +89,32 @@ Response data
 Address
 =======
 
-Reserve
--------
+Create
+------
 
-/address POST
+Reserve an address from the provided namespace
+
+/address/:namespace POST
+
+Request data
 
 .. code-block:: javascript
 
     {
-      "namespace": "test-namespace",
       "hostname": "test-hostname"
     }
 
+Response data
+
+.. code-block:: javascript
+
+    {
+      "address": {
+        "namespace": "namespace-name",
+        "addresss": "192.100.200.1",
+        "hostname": "test-hostname"
+      }
+    }
 
 .. code-block:: bash
 

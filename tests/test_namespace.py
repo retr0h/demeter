@@ -35,11 +35,11 @@ from tests import helper
 class TestNamespace(unittest.TestCase):
     def setUp(self):
         self._namespace = Namespace()
-        self._name, self._cidr = helper.namespace_data()
+        self._name, self._cidr, self._family = helper.namespace_data()
 
     def setup_teardown_namespace(func):
         def wrapper(self, *args, **kwargs):
-            ns = self._namespace.create(self._name, self._cidr)
+            ns = self._namespace.create(self._name, self._cidr, self._family)
 
             func(self, *args, **kwargs)
 
@@ -49,11 +49,11 @@ class TestNamespace(unittest.TestCase):
     @setup_teardown_namespace
     def test_all(self):
         result = self._namespace.all()
-        self.assertEquals(1, len(result))
+        assert 1 <= len(result)
 
     @unpack
     @data(helper.namespace_data())
-    def test_all_is_empty(self, name, cidr):
+    def test_all_is_empty(self, name, cidr, family):
         result = self._namespace.all()
         self.assertEquals([], result)
 
@@ -64,14 +64,14 @@ class TestNamespace(unittest.TestCase):
 
     @unpack
     @data(helper.namespace_data(cidr='198.51.100.0/36'))
-    def test_create_not_allowed(self, name, cidr):
+    def test_create_not_allowed(self, name, cidr, family):
         with self.assertRaises(netaddr.AddrFormatError):
-            self._namespace.create(name, cidr)
+            self._namespace.create(name, cidr, family)
 
     @unpack
     @data(helper.namespace_data())
-    def test_delete(self, name, cidr):
-        ns = self._namespace.create(name, cidr)
+    def test_delete(self, name, cidr, family):
+        ns = self._namespace.create(name, cidr, family)
 
         result = self._namespace.delete(ns)
         assert result
@@ -82,8 +82,8 @@ class TestNamespace(unittest.TestCase):
 
     @unpack
     @data(helper.namespace_data())
-    def test_delete_by_name(self, name, cidr):
-        ns = self._namespace.create(name, cidr)
+    def test_delete_by_name(self, name, cidr, family):
+        ns = self._namespace.create(name, cidr, family)
 
         result = self._namespace.delete_by_name(name)
         assert result
