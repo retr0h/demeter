@@ -51,9 +51,7 @@ class TestNamespace(unittest.TestCase):
         result = self._namespace.all()
         assert 1 <= len(result)
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_all_is_empty(self, name, cidr, family):
+    def test_all_is_empty(self):
         result = self._namespace.all()
         self.assertEquals([], result)
 
@@ -80,15 +78,10 @@ class TestNamespace(unittest.TestCase):
 
         self._namespace.delete(ns)
 
-    @unpack
-    @data(helper.namespace_data())
-    def test_delete_by_name(self, name, cidr, family):
-        ns = self._namespace.create(name, cidr, family)
-
-        result = self._namespace.delete_by_name(name)
+    @setup_teardown_namespace
+    def test_delete_by_name(self):
+        result = self._namespace.delete_by_name(self._name)
         assert result
-
-        self._namespace.delete(ns)
 
     @data('name-not-found')
     def test_delete_by_name_is_false_when_not_found(self, name):
